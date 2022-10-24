@@ -11,8 +11,8 @@ case $1 in
 esac
 shift
 done
-ip=54.82.193.158
-keyPair=aws-key-pair-us-east-1-tryit-v2.pem
+ip=************
+keyPair=aws-***********.pem
 dirFrontStaging="/home/ubuntu/api-staging"
 dirFrontProd="/home/ubuntu/api-production"
 connection="ssh -i $keyPair ubuntu@$ip"
@@ -41,7 +41,7 @@ f-deploy-production () {
 	zip -r dist.zip dist/*
 	scp -i ~/.ssh/${keyPair} dist.zip ubuntu@${ip}:/home/ubuntu/
 	ssht=" unzip dist.zip"
-
+    ssht+=" && sudo rm -Rf ${dirFrontProd}/*"
 	ssht+=" && sudo mv dist api-staging"
 	ssht+=" && sudo mv ${dirFrontProd}/dist/* ${dirFrontProd}"
 	ssht+=" && rm dist.zip"
