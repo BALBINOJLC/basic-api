@@ -1,0 +1,52 @@
+{
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "project": "tsconfig.json",
+        "sourceType": "module"
+    },
+    "plugins": ["@typescript-eslint", "unused-imports"],
+    "extends": [
+        "airbnb-typescript/base",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:import/recommended",
+        "plugin:import/typescript",
+        "prettier"
+    ],
+    "root": true,
+    "env": {
+        "node": true,
+        "jest": true
+    },
+    "rules": {
+        "@typescript-eslint/prefer-default-export": "off",
+        "import/prefer-default-export": "off",
+        "import/no-unresolved": "off",
+        "class-methods-use-this": "off",
+        "max-classes-per-file": "off",
+        "new-cap": "off",
+        "lines-between-class-members": "off",
+        "eslint-no-use-before-defining": "off",
+        "@typescript-eslint/no-useless-constructor": "off",
+        "no-underscore-dangle": "off",
+        "@typescript-eslint/naming-convention": [
+            "error",
+            {
+                "selector": "variable",
+                "modifiers": ["destructured"],
+                "format": null
+            }
+        ],
+        "no-unused-vars": "error",
+        "unused-imports/no-unused-imports": "error",
+        "unused-imports/no-unused-vars": [
+            "warn",
+            {
+                "vars": "all",
+                "varsIgnorePattern": "^_",
+                "args": "after-used",
+                "argsIgnorePattern": "^_"
+            }
+        ]
+    }
+}

@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+    ImageId:
+        Type: 'AWS::EC2::Image::Id'
+
+    InstanceType:
+        Type: String
+
+    DomainAPI:
+        Type: String
+
+    WebappRole:
+        Type: String
+
+    AWSRegion:
+        Type: String
+
+    KeyPairName:
+        Type: String
+        Default: aws-key-pair-us-east-1-
+        Description: Name From Key Pair
+
+Resources:
+    NewKeyPair:
+        Type: 'AWS::EC2::KeyPair'
+        Properties:
+            KeyName: !Ref KeyPairName
+
+    #MyInstanceProfile:
+    #    Type: 'AWS::IAM::InstanceProfile'
+    #    Properties:
+    #    Path: '/'
+    #    Roles:
+    #        - Ref: WebappRole
+
+    Ec2Instance:
+        Type: 'AWS::EC2::Instance'
+        Properties:
+            ImageId: !Ref ImageId
+            KeyName: !Ref NewKeyPair
+            InstanceType: !Ref InstanceType
+            UserData:
+                'Fn::Base64': !Sub |
+                    #!/bin/bash
+                    sudo apt-get update
+                    sudo apt install nginx -y
+                    sudo apt install wget -y
+                    curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+                    sudo apt-get install -y nodejs
+                    sudo npm install -g nodemon
+                    sudo npm install -g pm2
+                    sudo apt install snapd
+                    sudo snap install certbot --classic
+                    sudo ln -s /snap/bin/certbot /usr/bin/certbot
+                    sudo apt install -y ruby-full
+                    cd /home/ubuntu
+
+                    sudo apt remove cmdtest
+                    sudo apt remove yarn
+                    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+                    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+                    sudo apt-get update
+                    sudo apt-get install yarn -y
+
+                    sudo wget https://aws-codedeploy-${AWSRegion}.s3.${AWSRegion}.amazonaws.com/latest/install
+                    sudo chmod +x ./install
+                    sudo ./install auto > /tmp/logfile
+                    sudo service codedeploy-agent start 
+                    sudo service codedeploy-agent status
+
+                    sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+                    curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key' | sudo apt-key add
+                    echo "deb https://packages.doppler.com/public/cli/deb/debian any-version main" | sudo tee /etc/apt/sources.list.d/doppler-cli.list 
+                    sudo apt-get update && sudo apt-get install doppler -y
+
+                    echo "server {
+                        listen 80;
+                        server_name ${DomainAPI};
+                        location / {
+                            proxy_pass http://localhost:8080;
+                            proxy_set_header Host \$host;
+                            proxy_set_header X-Real-IP \$remote_addr;
+                            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+                            proxy_set_header X-Forwarded-Proto \$scheme;
+                            proxy_set_header X-Forwarded-Port \$server_port;
+                            proxy_set_header X-Forwarded-Server \$host;
+                            proxy_redirect off;
+                        }
+                    }" > /etc/nginx/conf.d/domain.com.conf
+
+                    sudo certbot run -n --nginx --agree-tos -d api.stag.tryit.cl -m msanz@gux.tech --redirect
+
+Outputs:
+    NewKeyPair:
+        Description: Deployment bucket
+        Value: !Ref NewKeyPair
+
+    WebappRoleInstance:
+        Description: Role From Instance
+        Value: !Ref WebappRole
+    AWSRegionInstance:
+        Description: AWSRegion From Instance
+        Value: !Ref AWSRegion

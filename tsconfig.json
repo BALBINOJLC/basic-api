@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "declaration": true,
+        "removeComments": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "es2017",
+        "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "incremental": true,
+        "lib": ["ES2020.Promise"],
+        "skipLibCheck": true,
+        "allowJs": true,
+        "paths": {
+            "@base": ["src/@base/index"],
+            "@modules": ["src/@modules/index"],
+            "@utils": ["src/@base/utils/index"],
+            "@casl": ["src/casl/index"],
+            "@health": ["src/health/index"],
+            "@pipes": ["src/pipes/index"],
+            "@users": ["src/v1/users/index"],
+            "@auth": ["src/v1/auth/index"],
+            "@email": ["src/v1/email/index"],
+            "@ecommerce": ["src/v1/ecommerce/index"],
+            "@transbank": ["src/v1/transbank/index"],
+            "@awss3": ["src/v1/awsS3/index"]
+        }
+    }
+}
