@@ -4,7 +4,7 @@ const { defaults: tsjPreset } = require('ts-jest/presets');
 module.exports = {
     transform: tsjPreset.transform,
     testEnvironment: 'node',
-    preset: '@shelf/jest-mongodb',
+    preset: '',
     setupFilesAfterEnv: [],
     coverageDirectory: './coverage',
     collectCoverageFrom: ['src/**/*.ts'],
@@ -25,9 +25,5 @@ module.exports = {
         '@health': '<rootDir>/src/health/index',
         '@utils': '<rootDir>/src/@base/utils/index',
         '@pipes': '<rootDir>/src/@base/pipes/index',
-        '@users': '<rootDir>/src/@base/v1/users/index',
-        '@auth': '<rootDir>/src/@base/v1/auth/index',
-        '@email': '<rootDir>/src/@base/v1/email/index',
-        '@ecommerce': '<rootDir>/src/@base/v1/ecommerce/index',
     },
 };
