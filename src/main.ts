@@ -46,7 +46,7 @@ async function bootstrap() {
 
     const configSw = new DocumentBuilder()
         .setTitle('Base API Nestjs Startups Cell')
-        .setDescription('This is the documentatio of the base api from Statups Cell')
+        .setDescription('This is the documentation of the base api from Statups Cell')
         .setVersion('1.0')
         .addTag('Startups Cell')
         .addBasicAuth()
