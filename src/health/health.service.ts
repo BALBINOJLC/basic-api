@@ -17,6 +17,7 @@ export class HealthService {
             environment: this.configService.get('NODE_ENV'),
             service: this.configService.get('npm_package_name'),
             appVersionPackage: this.configService.get('npm_package_version'),
+            description: this.configService.get('npm_package_description'),
         };
     }
 

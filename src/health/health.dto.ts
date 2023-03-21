@@ -15,4 +15,7 @@ export class HealthDto {
 
     @ApiProperty()
     appVersionPackage: string;
+
+    @ApiProperty()
+    description: string;
 }

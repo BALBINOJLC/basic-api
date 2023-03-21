@@ -21,7 +21,7 @@ async function bootstrap() {
             },
         })
     );
-    app.setGlobalPrefix(config.get('APP_PREFIX'));
+    app.setGlobalPrefix(config.get('API_PREFIX'));
     app.enableCors();
     app.enableVersioning({
         type: VersioningType.URI,
@@ -45,16 +45,16 @@ async function bootstrap() {
     app.use(urlencoded({ extended: true, limit: '50mb' }));
 
     const configSw = new DocumentBuilder()
-        .setTitle('Base API Nestjs Startups Cell')
-        .setDescription('This is the documentation of the base api from Statups Cell')
+        .setTitle('API BASE STARTUP CELL')
+        .setDescription('Documentación de la API de la célula Statups')
         .setVersion('1.0')
-        .addTag('Startups Cell')
+        .addTag('GUX, STARTUPS')
         .addBasicAuth()
         .addBearerAuth()
         .build();
     const document = SwaggerModule.createDocument(app, configSw);
     SwaggerModule.setup('docs', app, document);
 
-    await app.listen(config.get('PORT'));
+    await app.listen(config.get('API_PORT'));
 }
 bootstrap();
