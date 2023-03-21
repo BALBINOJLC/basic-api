@@ -2,10 +2,6 @@ import { registerAs } from '@nestjs/config';
 //TODO sacar gitignore
 export default registerAs('config', () => {
     return {
-        dataBase: {
-            uri: process.env.MONGO_URL,
-            dbName: process.env.DB_NAME,
-        },
         node: {
             env: process.env.NODE_ENV,
             port: process.env.PORT,
@@ -22,13 +18,7 @@ export default registerAs('config', () => {
         client: {
             uri_client: process.env.URI_FRONT,
         },
-        transbank: {
-            oneclick: {
-                api_key_one_clic: process.env.API_KEY_ONE_CLICK,
-                ecommerce_code_mall: process.env.ECOMMERCE_CODE_ONECLICK_MALL,
-                ecommerce_code_shop: process.env.ECOMMERCE_CODE_ONECLICK_SHOP,
-            },
-        },
+
         sendgrid: {
             api_key: process.env.SENDGRID_API_KEY,
             templates: {
@@ -37,12 +27,6 @@ export default registerAs('config', () => {
                     reset_password: process.env.TEMPLATE_RESET_PASSWORD,
                 },
             },
-        },
-        aws: {
-            access_key_id: process.env.AWS_ACCESS_KEY_ID,
-            secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
-            region: process.env.AWS_REGION,
-            bucket: process.env.AWS_BUCKET,
         },
     };
 });

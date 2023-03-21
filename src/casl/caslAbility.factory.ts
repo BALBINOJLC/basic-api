@@ -3,7 +3,6 @@
 /* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ability, InferSubjects, AbilityBuilder, AbilityClass } from '@casl/ability';
-import { RolesUserEnumBase } from '@modules';
 import { Injectable } from '@nestjs/common';
 import { ActionEnum } from '@utils';
 
@@ -18,7 +17,7 @@ export class CaslAbilityFactory {
     createForUser(user: any): Ability<any> {
         const { can, cannot, build, rules } = new AbilityBuilder<Ability<[ActionEnum, Subjects]>>(Ability as AbilityClass<AppAbility>);
 
-        if (user.role === RolesUserEnumBase.ADMIN) {
+        if (user.role === 'ADMIN') {
             can(ActionEnum.MANAGE, 'all');
         } else {
             can(ActionEnum.READ, 'all');
