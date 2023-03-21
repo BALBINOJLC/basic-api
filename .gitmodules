@@ -1,7 +1,3 @@
 [submodule "src/@base"]
 	path = src/@base
 	url = https://github.com/mundobox/ms-api-startups
-[submodule "src/@modules/userauth"]
-	path = src/@modules/userauth
-	url = https://github.com/mundobox/ms-api-auth
-
