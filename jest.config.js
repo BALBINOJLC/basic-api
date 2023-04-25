@@ -4,7 +4,7 @@ const { defaults: tsjPreset } = require('ts-jest/presets');
 module.exports = {
     transform: tsjPreset.transform,
     testEnvironment: 'node',
-    preset: '',
+    preset: 'ts-jest',
     setupFilesAfterEnv: [],
     coverageDirectory: './coverage',
     collectCoverageFrom: ['src/**/*.ts'],
