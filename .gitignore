@@ -39,3 +39,4 @@ globalConfig.json
 *.lock
 *.env
 db/*
+dist.zip
