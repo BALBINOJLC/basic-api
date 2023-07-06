@@ -22,6 +22,10 @@ f-deploy-staging () {
 	
 	rm dist.zip
     cp -v package.json ./dist/package.json
+	cp -v pdfservices-api-credentials.json ./dist/pdfservices-api-credentials.json
+	cp -v private.key ./dist/private.key
+	cp -v StudentDocTemplate.docx ./dist/StudentDocTemplate.docx
+	cp -v process.staging.json ./dist/process.staging.json
 	zip -r dist.zip dist/*
 	scp -i ~/.ssh/${keyPair} dist.zip ubuntu@${ip}:/home/ubuntu/
 	ssht=" unzip dist.zip"
@@ -38,6 +42,15 @@ f-deploy-staging () {
 f-deploy-production () {
 	rm dist.zip
     cp -v package.json ./dist/package.json
+	cp -v pdfservices-api-credentials.json ./dist/pdfservices-api-credentials.json
+    cp -v private.key ./dist/private.key
+
+	cp -v pdfservices-api-credentials-3.json ./dist/pdfservices-api-credentials-3.json
+    cp -v private3.key ./dist/private3.key
+
+
+    cp -v StudentDocTemplate.docx ./dist/StudentDocTemplate.docx
+	cp -v process.json ./dist/process.json
 	zip -r dist.zip dist/*
 	scp -i ~/.ssh/${keyPair} dist.zip ubuntu@${ip}:/home/ubuntu/
 	ssht=" unzip dist.zip"
