@@ -38,7 +38,6 @@ lerna-debug.log*
 !.vscode/extensions.json
 !nest.code-snippets
 globalConfig.json
-*.lock
 *.env
 db/*
 dist.zip
