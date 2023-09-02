@@ -3,20 +3,20 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('config', () => {
     return {
         node: {
-            env: process.env.NODE_ENV,
-            port: process.env.PORT,
-            prefix: process.env.APP_PREFIX,
-            uri_backend: process.env.URI_BACKEND,
+            env: process.env.API_ENV,
+            port: process.env.API_PORT,
+            prefix: process.env.API_PREFIX,
+            api_uri: process.env.API_URI,
+            uri_client: process.env.URI_CLIENT,
         },
+
         logger: {
             level: process.env.LOGGER_LEVEL,
             pretty: process.env.LOGGER_PRETTY_PRINT,
         },
+
         jwt: {
             jxt_key: process.env.JWT_KEY,
-        },
-        client: {
-            uri_client: process.env.URI_FRONT,
         },
 
         sendgrid: {
