@@ -4,7 +4,7 @@
   // Modules Standar
 
   "Nest Create Schema": {
-    "prefix": "Nest Create Schema",
+    "prefix": "Nest_create_schema",
     "body": [
       "import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';",
       "import { Document, Types } from 'mongoose';",
@@ -45,7 +45,7 @@
   },
 
   "Nest Create DTO": {
-    "prefix": "Nest Create Dto",
+    "prefix": "Nest_create_dto",
     "body": [
       "import { ApiProperty, PartialType } from '@nestjs/swagger';",
       "import { ResponseList } from '@utils';",
@@ -89,7 +89,7 @@
   },
 
   "Nest Create Controller": {
-    "prefix": "Nest Create Controller",
+    "prefix": "Nest_create_controller",
     "body": [
       "import { Body, Controller, Delete, Get, Param, Post, Put, Query, Res, UseGuards } from '@nestjs/common';",
       "import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';",
@@ -186,8 +186,21 @@
     ]
   },
 
+  "Nest Create Interface": {
+    "prefix": "Nest_create_interface",
+    "body": [
+      "import { $1Document } from '../schemas';",
+      "",
+      "export interface IResp$1Updated {",
+      "    data: $1Document;",
+      "    message: string;",
+      "}"
+    ]
+  
+  },
+
   "Nest Create Service": {
-    "prefix": "Nest Create Service",
+    "prefix": "Nest_create_service",
     "body": [
       "import { HttpException, HttpStatus, Injectable } from '@nestjs/common';",
       "import { InjectModel } from '@nestjs/mongoose';",
@@ -195,6 +208,7 @@
       "import { Model } from 'mongoose';",
       "import { Resp$1List, Create$1Dto, Filter$1Dto, Update$1Dto } from '../dtos';",
       "import { $1Document, $1SchemaName } from '../schemas';",
+      "import { IRes$1Updated } from '../interfaces';",
       "",
       "@Injectable()",
       "export class $1Service {",
@@ -346,11 +360,14 @@
       "        isDeleted: false,",
       "    };",
       "",
-      "    return new Promise<$1Document>(async (resolve, reject) => {",
+      "    return new Promise<IResp$1Updated>(async (resolve, reject) => {",
       "        try {",
       "            const data = await this.model.findOneAndUpdate(query, input, { new: true });",
       "            if (data) {",
-      "                resolve(data);",
+      "               resolve({,",
+      "                   data,", 
+      "                   message: '$2.SUCCESS.UPDATED',",  
+      "               );",
       "            } else {",
       "                const error = {",
       "                    code: new HttpException('$2.UPDATE.ERRORS.NOT_FOUND', HttpStatus.NOT_FOUND),",
@@ -427,7 +444,7 @@
   },
 
   "Nest Create Module": {
-    "prefix": "Nest Create Module",
+    "prefix": "Nest_create_module",
     "body": [
       "import { Module } from '@nestjs/common';",
       "import { $1Service } from './services';",
@@ -448,7 +465,7 @@
   },
 
   "Nest Index Export Module": {
-    "prefix": "Nest index export module",
+    "prefix": "Nest_index_export_module",
     "body": [
       "export * from './$1.module';",
       "export * from './controllers';",
