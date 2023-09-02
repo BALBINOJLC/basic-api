@@ -7,7 +7,7 @@ export default registerAs('config', () => {
             port: process.env.API_PORT,
             prefix: process.env.API_PREFIX,
             api_uri: process.env.API_URI,
-            uri_client: process.env.URI_CLIENT,
+            client_uri: process.env.CLIENT_URI,
         },
 
         logger: {
