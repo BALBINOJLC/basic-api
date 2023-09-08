@@ -83,5 +83,9 @@ echo "export * from './dtos';" >> "$ruta/index.ts"
 echo "export * from './interfaces';" >> "$ruta/index.ts"
 echo "export * from './enums';" >> "$ruta/index.ts"
 
+# Crear el archivo 'module.ts' en la raiz de la carpeta
+touch "$ruta/${nombre}.module.ts"
+
+
 
 echo "Creado con éxito la carpeta y los archivos."
