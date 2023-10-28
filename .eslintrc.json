@@ -19,24 +19,22 @@
         "jest": true
     },
     "rules": {
-        "@typescript-eslint/prefer-default-export": "off",
-        "import/prefer-default-export": "off",
-        "import/no-unresolved": "off",
-        "class-methods-use-this": "off",
-        "max-classes-per-file": "off",
-        "new-cap": "off",
-        "lines-between-class-members": "off",
-        "eslint-no-use-before-defining": "off",
-        "@typescript-eslint/no-useless-constructor": "off",
-        "no-underscore-dangle": "off",
-        "@typescript-eslint/naming-convention": [
+        "@typescript-eslint/explicit-module-boundary-types": "error",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-call": "error",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-return": "error",
+        "max-lines": [
             "error",
             {
-                "selector": "variable",
-                "modifiers": ["destructured"],
-                "format": null
+                "max": 500,
+                "skipBlankLines": true,
+                "skipComments": true
             }
         ],
+        "complexity": ["error", 10],
+        "import/no-unresolved": "off",
         "no-unused-vars": "error",
         "unused-imports/no-unused-imports": "error",
         "unused-imports/no-unused-vars": [
@@ -47,6 +45,9 @@
                 "args": "after-used",
                 "argsIgnorePattern": "^_"
             }
-        ]
+        ],
+        "linebreak-style": ["error", "unix"],
+        "quotes": ["error", "single"],
+        "semi": ["error", "always"]
     }
 }
