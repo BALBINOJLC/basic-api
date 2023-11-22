@@ -1,80 +1,81 @@
 #!/bin/bash
-while [[ "$#" -gt 0 ]]
-do
-case $1 in
-  -d|--deploy)
-    deploy="$2"
-    ;;
-  -s|--send)
-    send="send=$2"
-    ;;
-esac
-shift
-done
+
+# Variables
+# Domain Staging: api.signatures.tufirma.gux.cl
 ip=************
-keyPair=aws-***********.pem
-dirFrontStaging="/home/ubuntu/api-staging"
-dirFrontProd="/home/ubuntu/api-production"
+keyPair=**********.pem
+dirStaging="/home/ubuntu/api-staging"
+dirProduction="/home/ubuntu/api-production"
 connection="ssh -i $keyPair ubuntu@$ip"
+distZip="dist.zip"
 
-
-f-deploy-staging () {
-	
-	rm dist.zip
-    cp -v package.json ./dist/package.json
-	cp -v pdfservices-api-credentials.json ./dist/pdfservices-api-credentials.json
-	cp -v private.key ./dist/private.key
-	cp -v StudentDocTemplate.docx ./dist/StudentDocTemplate.docx
+# Function: Deploy staging
+f-deploy-staging() {
+	rm $distZip
+	cp -v package.json ./dist/package.json
 	cp -v process.staging.json ./dist/process.staging.json
-	zip -r dist.zip dist/*
-	scp -i ~/.ssh/${keyPair} dist.zip ubuntu@${ip}:/home/ubuntu/
-	ssht=" unzip dist.zip"
-	ssht+=" && sudo rm -Rf ${dirFrontStaging}/*"
-	ssht+=" && sudo mv dist api-staging"
-	ssht+=" && sudo mv ${dirFrontStaging}/dist/* ${dirFrontStaging}"
-	ssht+=" && rm dist.zip"
+	cp -v firebase-admin.json ./dist/firebase-admin.json
+	zip -r $distZip dist/*
+	scp -i ~/.ssh/${keyPair} $distZip ubuntu@${ip}:/home/ubuntu/
+
+	ssht="unzip $distZip"
+	ssht+=" && sudo rm -Rf ${dirStaging}/*"
+	ssht+=" && mkdir -p ${dirStaging}"
+	ssht+=" && sudo mv dist $dirStaging/"
+	ssht+=" && sudo mv ${dirStaging}/dist/* ${dirStaging}"
+	ssht+=" && sudo chown -R $USER $dirStaging"
+	ssht+=" && cd /home/ubuntu/"
+	ssht+=" && rm $distZip"
+	ssht+=" && cd ${dirStaging}"
 	ssht+=" && sudo rm -Rf dist"
-	ssht+=" && cd ${dirFrontStaging}"
+	ssht+=" && sudo chown -R $USER $dirStaging"
 	ssht+=" && yarn"
-	
 }
 
-f-deploy-production () {
-	rm dist.zip
-    cp -v package.json ./dist/package.json
-	cp -v pdfservices-api-credentials.json ./dist/pdfservices-api-credentials.json
-    cp -v private.key ./dist/private.key
+# Function: Deploy production api.teams.staging.sicrux.app
+f-deploy-production() {
 
-	cp -v pdfservices-api-credentials-3.json ./dist/pdfservices-api-credentials-3.json
-    cp -v private3.key ./dist/private3.key
-
-
-    cp -v StudentDocTemplate.docx ./dist/StudentDocTemplate.docx
+	rm $distZip
+	cp -v package.json ./dist/package.json
 	cp -v process.json ./dist/process.json
-	zip -r dist.zip dist/*
-	scp -i ~/.ssh/${keyPair} dist.zip ubuntu@${ip}:/home/ubuntu/
-	ssht=" unzip dist.zip"
-    ssht+=" && sudo rm -Rf ${dirFrontProd}/*"
-	ssht+=" && sudo mv dist api-staging"
-	ssht+=" && sudo mv ${dirFrontProd}/dist/* ${dirFrontProd}"
-	ssht+=" && rm dist.zip"
+	cp -v firebase-admin.json ./dist/firebase-admin.json
+	zip -r $distZip dist/*
+	scp -i ~/.ssh/${keyPair} $distZip ubuntu@${ip}:/home/ubuntu/
+
+	ssht="unzip $distZip"
+	ssht+=" && sudo rm -Rf ${dirProduction}/*"
+	ssht+=" && sudo mv dist ${dirProduction}/"
+	ssht+=" && sudo mv ${dirProduction}/dist/* ${dirProduction}"
+	ssht+=" && cd /home/ubuntu/"
+	ssht+=" && rm $distZip"
+	ssht+=" && cd ${dirProduction}"
 	ssht+=" && sudo rm -Rf dist"
-	ssht+=" && cd ${dirFrontProd}"
 	ssht+=" && yarn"
+
 }
-case "$deploy" in
 
-	"staging")
-		f-deploy-staging
+# Main Script
+while [[ "$#" -gt 0 ]]; do
+	case $1 in
+	-d | --deploy)
+		deploy="$2"
+		;;
+	-s | --send)
+		send="send=$2"
+		;;
+	esac
+	shift
+done
+
+case "$deploy" in
+"staging")
+	f-deploy-staging
+	;;
+"production")
+	f-deploy-production
 	;;
 esac
 
-case "$deploy" in
-
-	"production")
-		f-deploy-production
-	;;
-esac
-if [ "$deploy" == "production" ] || [ "$deploy" == "staging" ] ; then 
+if [ "$deploy" == "production" ] || [ "$deploy" == "staging" ]; then
 	ssh -t -i ~/.ssh/${keyPair} ubuntu@${ip} "$ssht"
-fi 
+fi
