@@ -413,14 +413,17 @@ export class AuthService {
         });
     }
 
-    async changePassword(@Request() req: RequestWithUser, currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+    async changePassword(@Request() req, currentPassword: string, newPassword: string): Promise<{ message: string }> {
+        console.log('escambio');
         return new Promise<{ message: string }>(async (resolve, reject) => {
             try {
                 const email = req.user.email;
 
                 const validateUser = await this.validateUser(email, currentPassword);
                 await this.validateSamePassword(newPassword, validateUser.password);
-                resolve({ message: 'ok' });
+                await this._userService.update({ email }, { password: newPassword }, String(validateUser._id));
+                resolve({ message: 'AUTH.SUCCESS.PASSWORD.UPDATED' });
             } catch (err) {
                 reject(err);
             }

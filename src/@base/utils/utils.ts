@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as bcrypt from 'bcrypt';
 import _ from 'lodash';
@@ -35,6 +39,25 @@ export const userNameAndCharter = (email: string) => {
     };
 
     return { userName, photoUrl };
+};
+
+export const generateUniqueRandomNumber = () => {
+    const min = 10000; // Valor mínimo de 5 dígitos
+    const max = 99999; // Valor máximo de 5 dígitos
+    const uniqueNumbers = new Set(); // Conjunto para almacenar números únicos generados
+
+    while (true) {
+        const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min; // Generar número aleatorio
+
+        if (!uniqueNumbers.has(randomNumber)) {
+            uniqueNumbers.add(randomNumber);
+            return randomNumber;
+        }
+
+        if (uniqueNumbers.size === max - min + 1) {
+            throw new Error('No se pueden generar más números únicos de 5 dígitos');
+        }
+    }
 };
 
 export const sumArrByKey = (arr: any[], keyGroup: string, labelSum: string) => {
