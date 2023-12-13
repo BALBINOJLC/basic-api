@@ -1,5 +1,5 @@
 import { HttpException } from '@nestjs/common';
-import { UserRolesEnum, UserTypesEnum } from '@users';
+
 import { Request } from 'express';
 
 export interface IRejectError {
@@ -14,8 +14,8 @@ export interface IUserToken {
     invited: boolean;
     organizationId?: string;
     password?: string;
-    role?: UserRolesEnum;
-    type?: UserTypesEnum;
+    role?: string;
+    type?: string;
     userName: string;
 }
 
