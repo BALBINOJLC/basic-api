@@ -48,7 +48,7 @@ class Product {
 }
 
 export class ItemMapper {
-    public static productToItem(products: Product[]) {
+    public static productToItem(products: Product[]): Item[] {
         const items = products.map((product: Product) => {
             const item = new Item();
             item.id = product.id;

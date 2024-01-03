@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from '@nestjs/common';
 
-export function apiResponseArrayWrapper(type: Type) {
+export function apiResponseArrayWrapper(type: Type): undefined | Type {
     class ResponseWrapperArray {
         @ApiProperty({ type: [type] })
         public data: Type[];
