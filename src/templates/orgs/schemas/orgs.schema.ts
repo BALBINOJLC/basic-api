@@ -62,10 +62,10 @@ export class Org {
     owner: UserDocument;
 
     @Prop({ type: Boolean, default: false })
-    isDeleted: boolean;
+    is_deleted: boolean;
 
     @Prop({ type: Date })
-    deletedAt: Date;
+    deleted_at: Date;
 }
 
 export type OrgDocument = Org & Document;

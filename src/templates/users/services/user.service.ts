@@ -77,7 +77,7 @@ export class UserService {
     async findAll(filter: UserFilterDto, params: ParamsDto): Promise<RespUserList> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
         Object.keys(filter).forEach((key) => {
             if (filter[key].toString().includes('!')) {
@@ -129,7 +129,7 @@ export class UserService {
     async search(filter: UserFilterDto, regExp: RegExp, params: ParamsDto): Promise<RespUserList> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         const { sort, fields } = params;
@@ -174,7 +174,7 @@ export class UserService {
     async findOne(filter: UserFilterDto, fields?: string): Promise<UserDocument> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         return new Promise<UserDocument>(async (resolve, reject) => {
@@ -202,7 +202,7 @@ export class UserService {
     async update(filter: UserFilterDto, input: UserUpdateDto, userId: string, userType?: UserTypesEnum): Promise<IUserUpdated> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         if (input.password) {
@@ -262,11 +262,11 @@ export class UserService {
 
                 if (dataToDelete) {
                     const newData = {
-                        userName: `${dataToDelete.userName}-IsDeleted-${new Date().getTime()}`,
-                        email: `${dataToDelete.email}-IsDeleted-${new Date().getTime()}`,
-                        rut: `${dataToDelete.dni}-IsDeleted-${new Date().getTime()}`,
-                        isDeleted: true,
-                        deletedAt: new Date(),
+                        userName: `${dataToDelete.userName}-is_deleted-${new Date().getTime()}`,
+                        email: `${dataToDelete.email}-is_deleted-${new Date().getTime()}`,
+                        rut: `${dataToDelete.dni}-is_deleted-${new Date().getTime()}`,
+                        is_deleted: true,
+                        deleted_at: new Date(),
                     };
                     const data = await this.model.findByIdAndUpdate(id, newData, { new: true }).exec();
                     const resp = {
@@ -296,7 +296,7 @@ export class UserService {
     async validate(filter: UserFilterDto): Promise<UserDocument> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         return new Promise<UserDocument>(async (resolve, reject) => {

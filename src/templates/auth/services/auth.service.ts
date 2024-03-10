@@ -252,7 +252,7 @@ export class AuthService {
                 const user = await this._userService.validate({ email });
 
                 if (user) {
-                    const validateCode = await this.model.findOne({ code, email, isDeleted: false });
+                    const validateCode = await this.model.findOne({ code, email, is_deleted: false });
                     console.log('validateCode', validateCode);
                     if (validateCode) {
                         await this._userService.update({ _id: String(user._id) }, { lastLogin: new Date() }, String(user._id));
@@ -260,9 +260,9 @@ export class AuthService {
 
                         const jwt = this.createJwtPayload(userJwt);
                         await this.model.findByIdAndUpdate(String(validateCode._id), {
-                            isDeleted: true,
-                            deletedAt: new Date(),
-                            code: `${validateCode.code}-isDeleted-${new Date().getTime()}`,
+                            is_deleted: true,
+                            deleted_at: new Date(),
+                            code: `${validateCode.code}-is_deleted-${new Date().getTime()}`,
                         });
                         resolve({
                             accessToken: jwt.token,

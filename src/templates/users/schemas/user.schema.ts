@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { PhotoDto } from '@utils';
-import { Document, Types } from 'mongoose';
+import { Document } from 'mongoose';
 import { UserRolesEnum, UserTypesEnum } from '../enums';
 
 export const UserSchemaName = 'UserSchema';
@@ -18,19 +18,19 @@ export class User {
         required: true,
         unique: true,
     })
-    userName: string;
+    user_name: string;
 
     @Prop({
         type: String,
         required: true,
     })
-    firstName: string;
+    first_name: string;
 
     @Prop({
         type: String,
         required: true,
     })
-    lastName: string;
+    last_name: string;
 
     @Prop({
         type: String,
@@ -45,13 +45,13 @@ export class User {
     @Prop({
         type: Date,
     })
-    lastLogin: Date;
+    last_login: Date;
 
     @Prop({
         type: String,
         required: true,
     })
-    displayName: string;
+    display_name: string;
 
     @Prop({ enum: UserTypesEnum, required: true })
     type: UserTypesEnum;
@@ -70,24 +70,24 @@ export class User {
         required: true,
         default: false,
     })
-    emailVerify: boolean;
+    email_verify: boolean;
 
     @Prop({
         type: Boolean,
         required: true,
         default: false,
     })
-    isActive: boolean;
+    is_active: boolean;
 
     @Prop({
         type: Boolean,
         required: true,
         default: false,
     })
-    twoAuth: boolean;
+    two_auth: boolean;
 
     @Prop({ type: PhotoDto })
-    photoUrl: PhotoDto;
+    photo_url: PhotoDto;
 
     @Prop({
         type: String,
@@ -102,23 +102,25 @@ export class User {
     @Prop({
         type: String,
     })
-    accessToken: string;
+    access_token: string;
 
-    @Prop({
-        type: Types.ObjectId,
-        default: null,
-        ref: 'Orgs',
-        autopopulate: {
-            select: 'name',
-        },
-    })
-    org: any;
+    @Prop({ type: String })
+    about: string;
+
+    @Prop({ type: String })
+    git_hub_profile: string;
+
+    @Prop({ type: String })
+    linked_in_profile: string;
 
     @Prop({ type: Boolean, default: false })
-    isDeleted: boolean;
+    register: boolean;
+
+    @Prop({ type: Boolean, default: false })
+    is_deleted: boolean;
 
     @Prop({ type: Date })
-    deletedAt: Date;
+    deleted_at: Date;
 }
 
 export type UserDocument = User & Document;

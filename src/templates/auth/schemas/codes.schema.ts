@@ -19,10 +19,10 @@ export class Codes {
     email: string;
 
     @Prop({ type: Boolean, default: false })
-    isDeleted: boolean;
+    is_deleted: boolean;
 
     @Prop({ type: Date })
-    deletedAt: Date;
+    deleted_at: Date;
 }
 
 export type CodesDocument = Codes & Document;

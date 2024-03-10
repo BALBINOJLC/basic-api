@@ -9,17 +9,17 @@ export class UserCreateDto {
     @ApiProperty({ description: 'First name of the user', required: true })
     @IsNotEmpty()
     @IsString()
-    firstName: string;
+    first_name: string;
 
     @ApiProperty({ description: 'Last name of the user', required: true })
     @IsNotEmpty()
     @IsString()
-    lastName: string;
+    last_name: string;
 
     @ApiProperty({ description: 'Display name of the user on the platform', required: true })
     @IsNotEmpty()
     @IsString()
-    displayName: string;
+    display_name: string;
 
     @ApiProperty({ description: 'Passport number of the user', required: false })
     @IsOptional()
@@ -56,11 +56,11 @@ export class UserCreateDto {
 
     @ApiProperty({ description: 'URL of the user\'s photo', required: false })
     @IsOptional()
-    photoUrl: PhotoDto;
+    photo_url: PhotoDto;
 
     @ApiProperty({ description: 'Two-factor authentication status', required: false })
     @IsOptional()
-    twoAuth?: boolean;
+    two_auth?: boolean;
 
     @ApiProperty({ description: 'ID of the organization the user belongs to', required: false })
     @IsOptional()
@@ -73,17 +73,17 @@ export class UserCreateDto {
     @ApiProperty({ description: 'Last login date', required: false })
     @IsOptional()
     @IsDate()
-    lastLogin?: Date;
+    last_login?: Date;
 
     @IsBoolean()
     @IsOptional()
     @ApiProperty()
-    isActive?: boolean;
+    is_active?: boolean;
 
     @IsBoolean()
     @IsOptional()
     @ApiProperty()
-    emailVerify?: boolean;
+    email_verify?: boolean;
 }
 
 export class UserUpdateDto extends PartialType(UserCreateDto) {
@@ -102,7 +102,7 @@ export class UserFilterDto extends PartialType(UserUpdateDto) {
     @ApiProperty({ description: 'Last login date', required: false })
     @IsOptional()
     @IsMongoId()
-    readonly userName?: string;
+    readonly user_name?: string;
 }
 
 export class RespUserList extends ResponseList {

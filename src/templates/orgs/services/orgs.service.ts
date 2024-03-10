@@ -80,7 +80,7 @@ export class OrganizationsService {
     async findAll(filter: FilterOrganizationsDto, params: ParamsDto): Promise<RespOrganizationsList> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
         const { fields, limit, offset, sort } = params;
         const newSort = JSON.parse(sort);
@@ -125,7 +125,7 @@ export class OrganizationsService {
     async search(filter: FilterOrganizationsDto, regExp: RegExp, params: ParamsDto): Promise<RespOrganizationsList> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         const { sort, fields } = params;
@@ -171,7 +171,7 @@ export class OrganizationsService {
     async findOne(filter: FilterOrganizationsDto, fields?: string): Promise<OrgDocument> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         return new Promise<OrgDocument>(async (resolve, reject) => {
@@ -199,7 +199,7 @@ export class OrganizationsService {
     async update(filter: FilterOrganizationsDto, input: UpdateOrganizationsDto, userId: string): Promise<IRespOrgUpdated> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
 
         return new Promise<IRespOrgUpdated>(async (resolve, reject) => {
@@ -256,9 +256,9 @@ export class OrganizationsService {
                     const newData = {
                         name: `${dataToDelete.name}-IsDelete-${new Date().getTime()}`,
                         slug: `${dataToDelete.slug}-IsDelete-${new Date().getTime()}`,
-                        isDeleted: true,
+                        is_deleted: true,
                         ownerId: '',
-                        deletedAt: new Date(),
+                        deleted_at: new Date(),
                     };
                     await this.model.findByIdAndUpdate(id, newData, { new: true }).exec();
 
@@ -286,7 +286,7 @@ export class OrganizationsService {
     async haveOrganizations(filter: FilterOrganizationsDto): Promise<OrgDocument> {
         const query = {
             ...filter,
-            isDeleted: false,
+            is_deleted: false,
         };
         return new Promise<OrgDocument>(async (resolve, reject) => {
             try {
