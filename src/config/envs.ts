@@ -17,20 +17,4 @@ export const envs = {
     jwt: {
         jxt_key: process.env.JWT_KEY,
     },
-
-    sendgrid: {
-        api_key: process.env.SENDGRID_API_KEY,
-        templates: {
-            auth: {
-                verify_account: process.env.TEMPLATE_VERIFY_ACCOUNT,
-                reset_password: process.env.TEMPLATE_RESET_PASSWORD,
-            },
-        },
-    },
-
-    twilio: {
-        account_sid: process.env.TWILIO_ACCOUNT_SID,
-        auth_token: process.env.TWILIO_AUTH_TOKEN,
-        phone_number: process.env.TWILIO_PHONE_NUMBER,
-    },
 };

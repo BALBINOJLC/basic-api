@@ -8,10 +8,8 @@ const eventsShema = Joi.object({
     API_PREFIX: Joi.string().required(),
     API_URI: Joi.string().required(),
     CLIENT_URI: Joi.string().required(),
-
     LOGGER_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug', 'log', 'silent').default('silent'),
     LOGGER_PRETTY_PRINT: Joi.boolean().default(true),
-
     JWT_KEY: Joi.string().required(),
 });
 
