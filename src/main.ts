@@ -1,27 +1,27 @@
 import * as helmet from 'helmet';
 import { json, urlencoded } from 'express';
-import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { envs } from './config/envs';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, {
         cors: true,
     });
-    const config = app.get<ConfigService>(ConfigService);
+
     app.useGlobalPipes(
         new ValidationPipe({
             transform: true,
             whitelist: true,
-            //forbidNonWhitelisted: true,
+            forbidNonWhitelisted: true,
             transformOptions: {
                 enableImplicitConversion: true,
             },
         })
     );
-    app.setGlobalPrefix(config.get('API_PREFIX'));
+    app.setGlobalPrefix(envs.node.prefix);
     app.enableCors();
     app.enableVersioning({
         type: VersioningType.URI,
@@ -43,7 +43,7 @@ async function bootstrap() {
     app.use(helmet.xssFilter());
     app.use(json({ limit: '50mb' }));
     app.use(urlencoded({ extended: true, limit: '50mb' }));
-
+    const logger = new Logger('bootstrap');
     const configSw = new DocumentBuilder()
         .setTitle('API BASE STARTUP CELL')
         .setDescription('Documentación de la API de la célula Statups')
@@ -55,6 +55,8 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, configSw);
     SwaggerModule.setup('docs', app, document);
 
-    await app.listen(config.get('API_PORT'));
+    await app.listen(envs.node.port);
+    logger.log(`Server running on ${envs.node.api_uri}`);
+    logger.log(`See the documentation in ${envs.node.api_uri}/docs`);
 }
 bootstrap();

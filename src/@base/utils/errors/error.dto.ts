@@ -27,6 +27,12 @@ export class ErrorResponseDto {
     code: number;
 
     @ApiProperty({ type: [DetailsProperties] })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     details: any[] | null;
+}
+
+export interface Errordata {
+    message: string;
+    statusCode: number;
+    module: string;
+    innerError?: Error;
 }
