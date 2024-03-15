@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 import _ from 'lodash';
 
 import * as moment from 'moment';
+import { IJwtUser } from './interfaces';
+import { IUser } from '@users';
 
 export const hassPassword = (password: string): string => {
     return bcrypt.hashSync(password, 10);
@@ -27,18 +29,51 @@ export const sumNumberArray = (array: number[]): number => {
     }, 0);
 };
 
-export const userNameAndCharter = (email: string) => {
-    const hash = new Date().getTime();
-    const length = 13;
-    const hasUser = hash.toString().substring(9, length);
-    const userName = `${email.split('@')[0].trim()}${hasUser}`;
-    const photoUrl = {
-        name: 'no-image',
-        color: randonColor(),
-        charter: userName.charAt(0).toUpperCase(),
+export interface UserNameAndCharterResponse {
+    user_name: string;
+    photo_url: {
+        name: string;
+        color: string;
+        charter: string;
+    };
+}
+
+export const userjwt = (user: IUser): IJwtUser => {
+    const userJwt: IJwtUser = {
+        _id: String(user._id),
+        email: user.email,
+        user_name: user.user_name,
+        role: user.role,
+        type: user.type,
+        display_name: user.display_name,
     };
 
-    return { userName, photoUrl };
+    return userJwt;
+};
+
+const randomColor = (): string => {
+    return '#' + Math.floor(Math.random() * 16777215).toString(16);
+};
+
+const generateUserName = (email: string): string => {
+    const hash = new Date().getTime().toString();
+    const userHash = hash.substring(hash.length - 4);
+    return `${email.split('@')[0].trim()}${userHash}`;
+};
+
+const generatePhotoUrl = (userName: string): { name: string; color: string; charter: string } => {
+    return {
+        name: 'no-image',
+        color: randomColor(), // Ensure this function exists and is imported
+        charter: userName.charAt(0).toUpperCase(),
+    };
+};
+
+export const userNameAndCharter = (email: string): UserNameAndCharterResponse => {
+    const userName = generateUserName(email);
+    const photoUrl = generatePhotoUrl(userName);
+
+    return { user_name: userName, photo_url: photoUrl };
 };
 
 export const generateUniqueRandomNumber = () => {

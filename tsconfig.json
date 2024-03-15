@@ -20,7 +20,8 @@
             "@utils": ["src/@base/utils/index"],
             "@casl": ["src/casl/index"],
             "@health": ["src/health/index"],
-            "@pipes": ["src/pipes/index"]
+            "@pipes": ["src/pipes/index"],
+            "@users": ["src/v1/features/users/index"]
         }
     }
 }

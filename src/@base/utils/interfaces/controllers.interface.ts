@@ -1,15 +1,14 @@
 import { Request } from 'express';
 
 export interface IUserToken {
-    _id: string;
-    email: string;
-    iat?: Date;
-    invited: boolean;
-    organizationId?: string;
-    password?: string;
-    role?: string;
-    type?: string;
-    userName: string;
+    _id         : string;
+    email       : string;
+    iat?        : Date;
+    invited     : boolean;
+    password?   : string;
+    role?       : string;
+    type?       : string;
+    userName    : string;
 }
 
 export interface RequestWithUser extends Request {
@@ -17,9 +16,11 @@ export interface RequestWithUser extends Request {
 }
 
 export interface ResponseList {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: any[];
-    page: number;
-    per_page: number;
-    total_count: number;
+    page        : number;
+    per_page    : number;
+    total_count : number;
+}
+
+export interface ResponseDeleted {
+   message: string;
 }
