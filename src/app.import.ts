@@ -1,5 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 
 import { LoggerModule } from 'nestjs-pino';
 
@@ -8,8 +12,7 @@ export const AppImports = [
         isGlobal: true,
     }),
 
-    // Activar si usa Mongo DB
-    /* MongooseModule.forRootAsync({
+    MongooseModule.forRootAsync({
         imports: [ConfigModule],
         inject: [ConfigService],
 
@@ -21,7 +24,7 @@ export const AppImports = [
                 return connection;
             },
         }),
-    }), */
+    }),
 
     LoggerModule.forRoot({
         pinoHttp: {

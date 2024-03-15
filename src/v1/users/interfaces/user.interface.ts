@@ -29,6 +29,7 @@ export interface IUser {
     two_auth?       : boolean;
     type            : UserTypesEnum;
     user_name?      : string;
+    is_active?      : boolean;
 }
 
 export interface IRespFindAllUsers extends ResponseList {

@@ -232,6 +232,29 @@ export class UserService implements IUserRepository {
         return input;
     }
 
+    async validate(filter: UserFilterDto): Promise<IUser> {
+        const query = {
+            ...filter,
+            is_deleted: false,
+        };
+
+        try {
+            const data = (await this.model.findOne(query).exec()) as unknown as IUser;
+            if (data) {
+                return data;
+            } else {
+                return null;
+            }
+        } catch (err) {
+            throw new CustomError({
+                message: 'USER.ERRORS.FIND',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
+    }
+
     private async persistUserUpdate(id: string, input: UserUpdateDto, userId: string): Promise<IUser> {
         const data = await this.model.findByIdAndUpdate(id, input, { new: true });
         if (!data) {

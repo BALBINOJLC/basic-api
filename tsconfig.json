@@ -21,7 +21,9 @@
             "@casl": ["src/casl/index"],
             "@health": ["src/health/index"],
             "@pipes": ["src/pipes/index"],
-            "@users": ["src/v1/users/index"]
+            "@users": ["src/v1/users/index"],
+            "@auth": ["src/v1/auth/index"],
+            "@email": ["src/v1/email/index"]
         }
     }
 }
