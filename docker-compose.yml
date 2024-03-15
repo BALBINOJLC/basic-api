@@ -1,15 +1,15 @@
 version: '3.8'
-
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    command: ["doppler", "run", "--", "yarn", "start:dev"]
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        env_file:
+            - ./.env
+        command: doppler run -- node dist/src/main.js
+        volumes:
+            - /usr/src/app
+            - /usr/src/app/node_modules
+            - ./firebase-admin.json:/usr/src/app/firebase-admin.json
+        ports:
+            - '8081:8081' # Asegúrate de que el puerto del contenedor sea 8081 como se define en tu Dockerfile y comando
