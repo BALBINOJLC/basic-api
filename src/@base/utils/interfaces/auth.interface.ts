@@ -1,5 +1,6 @@
 import { UserRolesEnum, UserTypesEnum } from '@users';
 
+
 export interface IJwtUser {
     _id         : string;
     display_name: string;

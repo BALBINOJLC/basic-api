@@ -1,3 +1,4 @@
+import { UserRolesEnum, UserTypesEnum } from '@users';
 import { Request } from 'express';
 
 export interface IUserToken {
@@ -6,8 +7,8 @@ export interface IUserToken {
     iat?        : Date;
     invited     : boolean;
     password?   : string;
-    role?       : string;
-    type?       : string;
+    role?       : UserRolesEnum;
+    type?       : UserTypesEnum;
     userName    : string;
 }
 

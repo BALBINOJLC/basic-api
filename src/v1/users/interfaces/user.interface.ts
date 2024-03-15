@@ -1,6 +1,7 @@
 import { IFile, ResponseList } from '@utils';
 import { UserRolesEnum, UserTypesEnum } from '../enums';
 
+
 export interface IUserUpdated {
     data            : IUser;
     message         : string;

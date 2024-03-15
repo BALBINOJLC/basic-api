@@ -8,7 +8,7 @@ import _ from 'lodash';
 
 import * as moment from 'moment';
 import { IJwtUser } from './interfaces';
-import { IUser } from '@users';
+import { IUser } from 'src/v1/users';
 
 export const hassPassword = (password: string): string => {
     return bcrypt.hashSync(password, 10);

@@ -13,7 +13,7 @@ import {
 import { PhotoDto } from '@utils';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { NetworksEnum, UserRolesEnum, UserTypesEnum } from '../../domain';
+import { NetworksEnum, UserRolesEnum, UserTypesEnum } from '../enums';
 
 export class UserCreateDto {
     @ApiProperty({ description: 'First name of the user', required: true })

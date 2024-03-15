@@ -4,14 +4,16 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { IRespFindAllUsers, IUser, IUserRepository, IUserUpdated, UserRolesEnum, UserTypesEnum } from '../../../domain';
-import { UserDocument, UserSchemaName } from '../../datasources';
-import { UserCreateDto, UserFilterDto, UserUpdateDto } from '../../../presentation';
 import { CustomError, IJwtUser, IUserToken, ParamsDto, hassPassword, userNameAndCharter, userjwt } from '@utils';
 import { JwtService } from '@nestjs/jwt';
+import { IUserRepository } from '../repositories';
+import { UserDocument, UserSchemaName } from '../schemas';
+import { UserCreateDto, UserFilterDto, UserUpdateDto } from '../dtos';
+import { IRespFindAllUsers, IUser, IUserUpdated } from '../interfaces';
+import { UserTypesEnum, UserRolesEnum } from '../enums';
 
 @Injectable()
-export class UserRepositoryImpl implements IUserRepository {
+export class UserService implements IUserRepository {
     constructor(
         @InjectModel(UserSchemaName) private model: Model<UserDocument>,
         private jwtService: JwtService
@@ -47,6 +49,48 @@ export class UserRepositoryImpl implements IUserRepository {
                 data,
                 page: offset,
                 per_page: perPage,
+                total_count: length,
+            };
+        } catch (err) {
+            throw new CustomError({
+                message: 'USER.ERRORS.FIND',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
+    }
+
+    async search(filter: UserFilterDto, regExp: RegExp, params: ParamsDto, user: IUserToken): Promise<IRespFindAllUsers> {
+        const query = this.buildQuery(filter, user);
+
+        const { sort, fields } = params;
+        const newSort = JSON.parse(sort);
+
+        try {
+            const length = await this.model
+                .find(query, fields)
+                .or([{ first_name: regExp }, { last_name: regExp }, { display_name: regExp }, { email: regExp }])
+                .countDocuments();
+
+            const data = await this.model
+                .find(query)
+                .or([{ first_name: regExp }, { last_name: regExp }, { display_name: regExp }, { email: regExp }])
+                .sort({ [newSort.field]: newSort.order })
+                .exec();
+
+            if (length == 0) {
+                throw new CustomError({
+                    message: 'USER.ERRORS.FIND',
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    module: this.constructor.name,
+                });
+            }
+
+            return {
+                data,
+                page: 0,
+                per_page: length,
                 total_count: length,
             };
         } catch (err) {
@@ -151,6 +195,19 @@ export class UserRepositoryImpl implements IUserRepository {
                 statusCode: HttpStatus.BAD_REQUEST,
                 module: this.constructor.name,
                 innerError: err,
+            });
+        }
+    }
+
+    async updateMasive(input: UserUpdateDto): Promise<unknown> {
+        try {
+            const data = await this.model.updateMany({}, input).exec();
+            return data;
+        } catch (err) {
+            throw new CustomError({
+                message: 'USER.ERRORS.UPDATE',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
             });
         }
     }
