@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ability, InferSubjects, AbilityBuilder, AbilityClass } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
-import { ActionEnum } from '@utils';
+import { ActionEnum } from './action.enum';
 
 // type Subjects = InferSubjects<typeof User | typeof Tag | typeof Item> | 'all';
 
@@ -12,9 +12,13 @@ type Subjects = InferSubjects<any> | 'all';
 
 export type AppAbility = Ability<[ActionEnum, Subjects]>;
 
+interface IUserCast {
+    [key: string]: any;
+}
+
 @Injectable()
 export class CaslAbilityFactory {
-    createForUser(user: any): Ability<any> {
+    createForUser(user: IUserCast): Ability<any> {
         const { can, cannot, build, rules } = new AbilityBuilder<Ability<[ActionEnum, Subjects]>>(Ability as AbilityClass<AppAbility>);
 
         if (user.role === 'ADMIN') {

@@ -18,12 +18,5 @@ module.exports = {
             statements: 90,
         },
     },
-    moduleNameMapper: {
-        '@base': '<rootDir>/src/@base/index',
-        '@modules': '<rootDir>/src/@modules/index',
-        '@casl': '<rootDir>/src/casl/index',
-        '@health': '<rootDir>/src/health/index',
-        '@utils': '<rootDir>/src/@base/utils/index',
-        '@pipes': '<rootDir>/src/@base/pipes/index',
-    },
+
 };

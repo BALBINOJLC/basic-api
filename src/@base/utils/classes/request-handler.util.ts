@@ -2,7 +2,7 @@
 // utils/request-handler.util.ts
 import { HttpException, Injectable } from '@nestjs/common';
 import { Response } from 'express';
-import { CustomError } from './error.class';
+import { CustomError } from '../errors/error.class';
 
 // Asumiendo que CustomError está correctamente definido en otro lugar
 @Injectable()

@@ -1,2 +1,2 @@
-export * from './photo.dto';
+export * from './file.dto';
 export * from './query.dto';

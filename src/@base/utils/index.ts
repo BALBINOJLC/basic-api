@@ -4,7 +4,6 @@ export * from './enums';
 export * from './errors';
 export * from './factories';
 export * from './guards';
-export * from './entities';
 export * from './dtos';
-export * from './mappers';
 export * from './interfaces';
+export * from './classes';

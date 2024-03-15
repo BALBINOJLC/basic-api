@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsOptional, IsString, Min } from 'class-validator';
 
 export class ParamsDto {
-    @IsNotEmpty()
+    @IsOptional()
     @Min(0)
     @ApiProperty({
         type: Number,
@@ -10,9 +10,9 @@ export class ParamsDto {
         description: 'Maximum quantity of items to return',
         example: 10,
     })
-    limit: number;
+    limit?: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @Min(0)
     @ApiProperty({
         type: Number,
@@ -20,7 +20,7 @@ export class ParamsDto {
         description: 'Offset of items',
         example: 20,
     })
-    offset: number;
+    offset?: number;
 
     @IsOptional()
     @IsString()
@@ -40,5 +40,5 @@ export class ParamsDto {
         description: 'The items will be sorted by this field',
         example: '{"field":"name","order":1}',
     })
-    sort: string;
+    sort?: string;
 }
