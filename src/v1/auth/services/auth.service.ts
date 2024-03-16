@@ -69,14 +69,13 @@ export class AuthService {
             const newUser: UserCreateDto = {
                 ...input,
                 role: input.role || UserRolesEnum.USER,
-                type: input.type || UserTypesEnum.ORG,
+                type: input.type || UserTypesEnum.CLIENT,
             };
             const user = (await this._userService.create(newUser)) as unknown as IUser;
             const userJwt = userjwt(user);
             const token = this.fComomnAuth.createJwtPayload(userJwt);
             try {
                 if (sendEmail) {
-                    // unhash user.password
                     await this._emailService.verifyAccount(token.token, user, invited);
                 }
                 return {
@@ -87,98 +86,99 @@ export class AuthService {
                 };
             } catch (error) {
                 throw new CustomError({
-                    message: 'AUTH.ERRORS.SIGNUP.EMAIL_NOT_SEND',
+                    message: error.message,
                     statusCode: HttpStatus.BAD_REQUEST,
-                    module: 'AuthService',
+                    module: this.constructor.name,
                     innerError: error,
                 });
             }
         } catch (error) {
             throw new CustomError({
-                message: 'AUTH.ERRORS.SIGNUP',
+                message: error.message || 'AUTH.ERRORS.SIGNUP',
                 statusCode: HttpStatus.BAD_REQUEST,
-                module: 'AuthService',
+                module: this.constructor.name,
                 innerError: error,
             });
         }
     }
 
     async signIn(@Request() req: RequestWithUser): Promise<ISingInSucces> {
-        return new Promise<ISingInSucces>(async (resolve, reject) => {
-            try {
-                const athorization = await this.getAuthorization(req);
-                const email = athorization[0];
-                const password = athorization[1];
-                // Validate SignIn Social Network
-                const netWork = athorization[2] as NetworksEnum;
-                const socialToken = athorization[3];
-                let datavalidation = null;
+        try {
+            const athorization = await this.getAuthorization(req);
+            const email = athorization[0];
+            const password = athorization[1];
+            // Validate SignIn Social Network
+            const netWork = athorization[2] as NetworksEnum;
+            const socialToken = athorization[3];
+            let datavalidation = null;
 
-                if (netWork && socialToken) {
-                    switch (netWork) {
-                        case NetworksEnum.GOOGLE:
-                            datavalidation = await this.fGoogleAuth.validateTokenGoogle(socialToken);
+            if (netWork && socialToken) {
+                switch (netWork) {
+                    case NetworksEnum.GOOGLE:
+                        datavalidation = await this.fGoogleAuth.validateTokenGoogle(socialToken);
 
-                            if (datavalidation.isValid) {
-                                const user = await this.validateUserSocial(email, datavalidation.isValid);
-                                if (user && typeof user !== 'boolean') {
-                                    const userUpdated = await this._userService.update(
-                                        String(user._id),
-                                        {
-                                            last_login: new Date(),
-                                            is_active: datavalidation.isValid,
-                                            email_verify: datavalidation.isValid,
-                                            sign_in_method: netWork,
-                                        },
-                                        String(user._id)
-                                    );
-                                    const userJwt = userjwt(user);
-                                    const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                                    resolve({
-                                        access_token: jwt.token,
-                                        user: userUpdated.data,
-                                        message: 'AUTH.SIGNIN_SUCCESS',
-                                    });
-                                    return;
-                                } else {
-                                    const newUser = await this.signUp(datavalidation.user, false, false);
-                                    const userLogged = await this._userService.update(
-                                        String(newUser._id),
-                                        {
-                                            last_login: new Date(),
-                                        },
-                                        String(newUser._id)
-                                    );
-                                    const userJwt = userjwt(userLogged.data);
-                                    const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                                    resolve({
-                                        access_token: jwt.token,
-                                        user: userLogged.data,
-                                        message: 'AUTH.SIGNIN_SUCCESS',
-                                    });
-                                    return;
-                                }
+                        if (datavalidation.isValid) {
+                            const user = await this.validateUserSocial(email, datavalidation.isValid);
+                            if (user && typeof user !== 'boolean') {
+                                const userUpdated = await this._userService.update(
+                                    String(user._id),
+                                    {
+                                        last_login: new Date(),
+                                        is_active: datavalidation.isValid,
+                                        email_verify: datavalidation.isValid,
+                                        sign_in_method: netWork,
+                                    },
+                                    String(user._id)
+                                );
+                                const userJwt = userjwt(user);
+                                const jwt = this.fComomnAuth.createJwtPayload(userJwt);
+                                return {
+                                    access_token: jwt.token,
+                                    user: userUpdated.data,
+                                    message: 'AUTH.SIGNIN_SUCCESS',
+                                };
+                            } else {
+                                const newUser = await this.signUp(datavalidation.user, false, false);
+                                const userLogged = await this._userService.update(
+                                    String(newUser._id),
+                                    {
+                                        last_login: new Date(),
+                                    },
+                                    String(newUser._id)
+                                );
+                                const userJwt = userjwt(userLogged.data);
+                                const jwt = this.fComomnAuth.createJwtPayload(userJwt);
+                                return {
+                                    access_token: jwt.token,
+                                    user: userLogged.data,
+                                    message: 'AUTH.SIGNIN_SUCCESS',
+                                };
                             }
+                        }
 
-                            break;
+                        break;
 
-                        default:
-                            break;
-                    }
+                    default:
+                        break;
                 }
-                const user = await this.validateUser(email, password);
-                await this._userService.update(String(user._id), { last_login: new Date() }, String(user._id));
-                const userJwt = userjwt(user);
-                const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                resolve({
-                    access_token: jwt.token,
-                    user,
-                    message: 'AUTH.SIGNIN_SUCCESS',
-                });
-            } catch (err) {
-                reject(err);
             }
-        });
+            const user = await this.validateUser(email, password);
+            await this._userService.update(String(user._id), { last_login: new Date() }, String(user._id));
+            const userJwt = userjwt(user);
+            const jwt = this.fComomnAuth.createJwtPayload(userJwt);
+            return {
+                access_token: jwt.token,
+                user,
+                message: 'AUTH.SIGNIN_SUCCESS',
+            };
+        } catch (err) {
+            throw new CustomError({
+                message: err.message,
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
     }
 
     async signInTwoAuth(code: string, email: string): Promise<ISingInSucces> {
@@ -256,36 +256,40 @@ export class AuthService {
     }
 
     async validateUser(email: string, password: string): Promise<IUser> {
-        return new Promise<IUser>(async (resolve, reject) => {
-            try {
-                const user = (await this._userService.findOne({ email })) as unknown as IUser;
+        try {
+            const user = (await this._userService.validate({ email })) as unknown as IUser;
 
-                if (!user) {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.SIGNIN', HttpStatus.BAD_REQUEST),
-                        err: null,
-                    };
-                    reject(error);
-                } else if (!user.email_verify) {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED', HttpStatus.FORBIDDEN),
-                        err: null,
-                    };
-                    reject(error);
-                } else if (!user.is_active) {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.SIGNIN.ACCOUNT_NOT_ACTIVATED', HttpStatus.FORBIDDEN),
-                        err: null,
-                    };
-                    reject(error);
-                }
-                await this.validatePassword(password, user.password);
-
-                resolve(user);
-            } catch (error) {
-                reject(error);
+            if (!user) {
+                throw new CustomError({
+                    message: 'USER.ERRORS.NOT_FOUND',
+                    statusCode: HttpStatus.NOT_FOUND,
+                    module: this.constructor.name,
+                });
+            } else if (!user.email_verify) {
+                throw new CustomError({
+                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
+                    statusCode: HttpStatus.FORBIDDEN,
+                    module: this.constructor.name,
+                });
+            } else if (!user.is_active) {
+                throw new CustomError({
+                    message: 'AUTH.ERRORS.SIGNIN.ACCOUNT_NOT_ACTIVATED',
+                    statusCode: HttpStatus.FORBIDDEN,
+                    module: this.constructor.name,
+                });
             }
-        });
+
+            await this.validatePassword(password, user.password);
+
+            return user;
+        } catch (error) {
+            throw new CustomError({
+                message: error.message,
+                statusCode: error.statusCode,
+                module: this.constructor.name,
+                innerError: error,
+            });
+        }
     }
 
     async getAuthorization(@Request() req: RequestWithUser): Promise<string[]> {
@@ -423,18 +427,17 @@ export class AuthService {
     }
 
     private async validatePassword(password: string, hashPassword: string): Promise<boolean> {
-        return new Promise<boolean>(async (resolve, reject) => {
-            const passwordValidation = await bcrypt.compare(password, hashPassword);
+        const passwordValidation = (await bcrypt.compare(password, hashPassword)) as boolean;
 
-            if (!passwordValidation) {
-                const error = {
-                    code: new HttpException('AUTH.ERRORS.SIGNIN.INCORRECT_PASSWORD', HttpStatus.FORBIDDEN),
-                    err: null,
-                };
-                reject(error);
-            }
-            resolve(passwordValidation);
-        });
+        if (!passwordValidation) {
+            throw new CustomError({
+                message: 'AUTH.ERRORS.SIGNIN.INCORRECT_PASSWORD',
+                statusCode: HttpStatus.FORBIDDEN,
+                module: this.constructor.name,
+            });
+        }
+
+        return passwordValidation;
     }
 
     private async validateSamePassword(password: string, hashPassword: string): Promise<boolean> {
@@ -454,26 +457,29 @@ export class AuthService {
     }
 
     private async validateUserSocial(email: string, isVerified: boolean) {
-        return new Promise<IUser | boolean>(async (resolve, reject) => {
-            try {
-                const user = await this._userService.validate({ email });
+        try {
+            const user = await this._userService.validate({ email });
 
-                if (!user) {
-                    resolve(false);
-                }
-
-                if (isVerified) {
-                    resolve(user);
-                } else {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED', HttpStatus.FORBIDDEN),
-                        err: null,
-                    };
-                    reject(error);
-                }
-            } catch (error) {
-                reject(error);
+            if (!user) {
+                return false;
             }
-        });
+
+            if (isVerified) {
+                return user;
+            } else {
+                throw new CustomError({
+                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    module: this.constructor.name,
+                });
+            }
+        } catch (err) {
+            throw new CustomError({
+                message: err.message,
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
     }
 }

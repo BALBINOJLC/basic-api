@@ -19,6 +19,10 @@ export class AuthController {
     }
 
     @Post('signup/:invited/:sendemail')
+    @ApiOperation({
+        summary: 'Sign Up',
+        description: 'Sign Up',
+    })
     async signup(
         @Body() body: SignUpDto,
         @Param('invited') invited: boolean,
@@ -35,16 +39,7 @@ export class AuthController {
         description: 'Sign In with email and password',
     })
     async signin(@Request() req: RequestWithUser, @Res() res: Response): Promise<Response> {
-        try {
-            const resp = await this._authService.signIn(req);
-            return res.json(resp);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
+        return RequestHandlerUtil.handleRequest(() => this._authService.signIn(req), res);
     }
 
     @Post('signin/twoauth')
