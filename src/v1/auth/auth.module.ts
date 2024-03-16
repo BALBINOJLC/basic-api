@@ -4,12 +4,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './services';
 import { JwtStrategy } from './jwt.strategy';
 import { AuthController, MessagesController } from './controllers';
-import { UsersModule } from '../users';
 import { LocalStrategy } from './local.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CodesSchema, CodesSchemaName } from './schemas';
 import { EmailsModule } from '@email';
-import { OrganizationsModule } from '../orgs/orgs.module';
+import { UsersModule } from '@users';
 
 @Module({
     imports: [
@@ -21,7 +20,6 @@ import { OrganizationsModule } from '../orgs/orgs.module';
             signOptions: { expiresIn: 3600 * 60 * 60 * 24 },
         }),
         EmailsModule,
-        OrganizationsModule,
     ],
     controllers: [AuthController, MessagesController],
     providers: [AuthService, LocalStrategy, JwtStrategy],

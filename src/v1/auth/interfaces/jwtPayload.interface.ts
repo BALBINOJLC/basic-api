@@ -1,4 +1,3 @@
-import { IOrgUser } from '@org';
 import { IUser, UserRolesEnum, UserTypesEnum } from '../../users';
 import { NetworksEnum } from '../enums';
 import { IFile } from '@base';
@@ -9,7 +8,6 @@ export interface IJwtUser {
     email: string;
     team: string | null;
     iat?: Date;
-    org?: IOrgUser;
     password?: string;
     role?: UserRolesEnum;
     type?: UserTypesEnum;
@@ -44,3 +42,9 @@ export interface ISocialUser {
     sign_in_method: NetworksEnum;
     photo_url: IFile;
 }
+export interface DecodedToken {
+    email: string;
+    email_verified: boolean;
+    name: string;
+    picture?: string;
+  }

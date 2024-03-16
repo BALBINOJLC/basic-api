@@ -2,9 +2,9 @@ import { SignUpDto } from '../dtos';
 
 import * as admin from 'firebase-admin';
 import { NetworksEnum } from '../enums';
-import { ISingUpSucces, ISocialUser } from '../interfaces';
-import { userjwt } from '@base';
-import { UserCreateDto, UserRolesEnum, UserService, UserTypesEnum } from '@users';
+import { DecodedToken, ISingUpSucces, ISocialUser } from '../interfaces';
+import { ValidationResult, userjwt } from '@base';
+import { IUser, UserCreateDto, UserRolesEnum, UserService, UserTypesEnum } from '@users';
 import { CommonAuthServise } from './comom.auth.service';
 import { JwtService } from '@nestjs/jwt';
 
@@ -47,47 +47,49 @@ export class SocialAuthService {
         });
     }
 
-    async validateTokenGoogle(token: string): Promise<{ isValid: boolean; user }> {
+    async validateTokenGoogle(token: string): Promise<ValidationResult> {
         try {
-            const decodedToken = await admin.auth().verifyIdToken(token);
-            const user = {
-                email: decodedToken.email,
-                email_verify: decodedToken.email_verified,
-                is_active: decodedToken.email_verified,
-                first_name: decodedToken.name.split(' ')[0],
-                last_name: decodedToken.name.split(' ')[1],
-                password: new Date().getTime().toString(),
-                photo_url: null,
-                socialToken: token,
+            const decodedToken = (await admin.auth().verifyIdToken(token)) as unknown as DecodedToken;
+            const user = this.createUser(decodedToken, token) as IUser;
+            return {
+                isValid: decodedToken.email_verified,
+                user,
             };
-            if (decodedToken.picture) {
-                user.photo_url = {
-                    url: decodedToken.picture,
-                    name: decodedToken.name.split(' ')[0],
-                    color: '#000000',
-                    charter: decodedToken.name.charAt(0).toUpperCase(),
-                };
-            }
-            const { email_verified: emailVerified } = decodedToken;
-            if (emailVerified) {
-                return {
-                    isValid: true,
-                    user,
-                };
-            } else {
-                return {
-                    isValid: false,
-                    user,
-                };
-            }
-
-            // Token is valid, continue with your code logic here
         } catch (error) {
             console.error('Error occurred:', error);
-            if (error.code === 'auth/invalid-id-token') {
-                console.error('The provided ID token is not a valid Firebase ID token.');
-                // Handle the invalid ID token error here
-            }
+            this.handleError(error);
+            throw error;
+        }
+    }
+
+    private createUser(decodedToken: DecodedToken, token: string): Partial<IUser> {
+        const names = decodedToken.name.split(' ');
+        const user: Partial<IUser> = {
+            email: decodedToken.email,
+            email_verify: decodedToken.email_verified,
+            is_active: decodedToken.email_verified,
+            first_name: names[0],
+            last_name: names.length > 1 ? names[1] : '',
+            password: new Date().getTime().toString(),
+            photo_url: null,
+            socialToken: token,
+            display_name: decodedToken.name,
+        };
+        if (decodedToken.picture) {
+            user.photo_url = {
+                url: decodedToken.picture,
+                name: names[0],
+                color: '#000000',
+                charter: decodedToken.name.charAt(0).toUpperCase(),
+            };
+        }
+        return user;
+    }
+
+    private handleError(error: any): void {
+        console.error('Error occurred:', error);
+        if (error.code === 'auth/invalid-id-token') {
+            console.error('The provided ID token is not a valid Firebase ID token.');
         }
     }
 
@@ -107,7 +109,7 @@ export class SocialAuthService {
 
                 if (userExists) {
                     delete userData.photo_url;
-                    const user = await this._userService.update({ _id: String(userExists._id) }, userData, String(userExists._id));
+                    const user = await this._userService.update(String(userExists._id), userData, String(userExists._id));
                     const userJwt = userjwt(user.data);
                     const token = this.fComomnAuth.createJwtPayload(userJwt);
                     resolve({
