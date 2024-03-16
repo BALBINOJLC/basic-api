@@ -23,4 +23,15 @@ export const envs = {
         auth_token: process.env.TWILIO_AUTH_TOKEN,
         twilio_phone: process.env.TWILIO_PHONE,
     },
+
+    sendgrid: {
+        api_key: process.env.SENDGRID_API_KEY,
+        templates: {
+            auth: {
+                verify_account: process.env.SENDGRID_VERIFY_ACCOUNT,
+                invite_user: process.env.SENDGRID_INVITE_USER,
+                reset_password: process.env.SENDGRID_RESET_PASSWORD,
+            },
+        },
+    },
 };

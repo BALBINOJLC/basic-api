@@ -1,10 +1,11 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { ConfigType } from '@nestjs/config';
+import { HttpStatus, Injectable } from '@nestjs/common';
+
 import * as SendGrid from '@sendgrid/mail';
-import config from 'src/config';
+import { envs } from 'src/config/envs';
 import { ISenderSendgrid, ISendgridTemplates } from '../interfaces';
 import { IUser, UserDocument } from '@users';
 import { IJwtUser } from '@auth';
+import { CustomError } from '@utils';
 
 @Injectable()
 export class EmailService {
@@ -18,14 +19,14 @@ export class EmailService {
 
     adminEmails: string[];
 
-    constructor(@Inject(config.KEY) private configService: ConfigType<typeof config>) {
-        SendGrid.setApiKey(String(this.configService.sendgrid.api_key));
+    constructor() {
+        SendGrid.setApiKey(String(envs.sendgrid.api_key));
         this.templates = {
-            SG_TP_VERIFY_ACCOUNT: String(this.configService.sendgrid.templates.auth.verify_account),
-            SG_TP_INVITE_USER: String(this.configService.sendgrid.templates.auth.verify_account),
-            SG_TP_RESET_PASSWORD: String(this.configService.sendgrid.templates.auth.reset_password),
+            SG_TP_VERIFY_ACCOUNT: String(envs.sendgrid.templates.auth.verify_account),
+            SG_TP_INVITE_USER: String(envs.sendgrid.templates.auth.verify_account),
+            SG_TP_RESET_PASSWORD: String(envs.sendgrid.templates.auth.reset_password),
         };
-        this.CLIENT_URI = this.configService.node.client_uri;
+        this.CLIENT_URI = envs.node.client_uri;
         this.sender = {
             senderEmail: 'hola@sicrux.com',
             senderName: 'Sicrux',
@@ -35,28 +36,28 @@ export class EmailService {
     }
 
     async addNewsLetter(email: string): Promise<unknown> {
-        return new Promise(async (resolve, reject) => {
-            const msg = {
-                to: 's33yfbt3@robot.zapier.com',
-                cco: ['msanz@gux.tech', 'hello@refashion.cl'],
-                subject: 'New Newsletter',
-                from: {
-                    name: this.sender.senderName,
-                    email: this.sender.senderEmail,
-                },
-                html: `email: ${email}`,
-            };
-            try {
-                const sendEmail = await SendGrid.send(msg);
-                resolve(sendEmail);
-            } catch (err) {
-                const error = {
-                    code: new HttpException('EMAIL.ERRORS.SEND.NEWS_LETTER', HttpStatus.BAD_REQUEST),
-                    err,
-                };
-                reject(error);
-            }
-        });
+        const msg = {
+            to: 's33yfbt3@robot.zapier.com',
+            cco: ['msanz@gux.tech', 'hello@refashion.cl'],
+            subject: 'New Newsletter',
+            from: {
+                name: this.sender.senderName,
+                email: this.sender.senderEmail,
+            },
+            html: `email: ${email}`,
+        };
+        try {
+            const sendEmail = await SendGrid.send(msg);
+            return sendEmail;
+        } catch (err) {
+            throw new CustomError({
+                message: 'EMAIL.ERRORS.SEND.NEWS_LETTER',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                innerError: err,
+            });
+        }
     }
 
     async verifyAccount(token: string, user: IUser, invited: boolean): Promise<unknown> {
@@ -85,106 +86,103 @@ export class EmailService {
                 const sendEmail = await SendGrid.send(msg);
                 resolve(sendEmail);
             } catch (err) {
-                const error = {
-                    code: new HttpException('EMAIL.ERRORS.SEND.VERIFY_ACCOUNT', HttpStatus.BAD_REQUEST),
-                    err,
-                };
-                console.log(error);
-                resolve(false);
+                throw new CustomError({
+                    message: 'EMAIL.ERRORS.SEND.VERIFY_ACCOUNT',
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    module: this.constructor.name,
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                    innerError: err,
+                });
             }
         });
     }
 
     async forgotPassword(token: string, user: UserDocument): Promise<unknown> {
-        return new Promise(async (resolve, reject) => {
-            const link = `${this.CLIENT_URI}/auth/reset-password/${token}`;
-            const msg = {
-                to: user.email,
-                from: {
-                    name: this.sender.senderName,
-                    email: this.sender.senderEmail,
-                },
-                templateId: this.templates.SG_TP_RESET_PASSWORD,
+        const link = `${this.CLIENT_URI}/auth/reset-password/${token}`;
+        const msg = {
+            to: user.email,
+            from: {
+                name: this.sender.senderName,
+                email: this.sender.senderEmail,
+            },
+            templateId: this.templates.SG_TP_RESET_PASSWORD,
 
-                dynamic_template_data: {
-                    user_name: user.user_name,
-                    link,
-                },
-            };
-            try {
-                const sendEmail = await SendGrid.send(msg);
-                resolve(sendEmail);
-            } catch (err) {
-                console.log(err.response.body.errors);
-
-                const error = {
-                    code: new HttpException('EMAIL.ERRORS.SEND.RESET_PASSWORD', HttpStatus.BAD_REQUEST),
-                    err,
-                };
-                reject(error);
-            }
-        });
+            dynamic_template_data: {
+                user_name: user.user_name,
+                link,
+            },
+        };
+        try {
+            const sendEmail = await SendGrid.send(msg);
+            return sendEmail;
+        } catch (err) {
+            throw new CustomError({
+                message: 'EMAIL.ERRORS.SEND.RESET_PASSWORD',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                innerError: err,
+            });
+        }
     }
 
     async newMessage(message: string, name: string, email: string): Promise<unknown> {
-        return new Promise(async (resolve, reject) => {
-            const msg = {
-                to: this.adminEmails,
-                from: {
-                    name: this.sender.senderName,
-                    email: this.sender.senderEmail,
-                },
-                subject: 'Nuevo Mensaje desde la Web',
-                html: `<p>Nombre: ${name}</p><p>Email: ${email}</p><p>Mensaje: ${message}</p>`,
+        const msg = {
+            to: this.adminEmails,
+            from: {
+                name: this.sender.senderName,
+                email: this.sender.senderEmail,
+            },
+            subject: 'Nuevo Mensaje desde la Web',
+            html: `<p>Nombre: ${name}</p><p>Email: ${email}</p><p>Mensaje: ${message}</p>`,
 
-                dynamic_template_data: {
-                    message: message,
-                    name: name,
-                    email: email,
-                },
-            };
-            try {
-                const sendEmail = await SendGrid.send(msg);
-                resolve(sendEmail);
-            } catch (err) {
-                const error = {
-                    code: new HttpException('EMAIL.ERRORS.SEND.NEW_MESSAGE', HttpStatus.BAD_REQUEST),
-                    err,
-                };
-                console.log(err);
-
-                reject(error);
-            }
-        });
+            dynamic_template_data: {
+                message: message,
+                name: name,
+                email: email,
+            },
+        };
+        try {
+            const sendEmail = await SendGrid.send(msg);
+            return sendEmail;
+        } catch (err) {
+            throw new CustomError({
+                message: 'EMAIL.ERRORS.SEND.NEW_MESSAGE',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                innerError: err,
+            });
+        }
     }
 
     async inviteUser(token: string, user: IUser, owner: IJwtUser): Promise<unknown> {
-        return new Promise(async (resolve, reject) => {
-            const link = `${this.CLIENT_URI}/auth/invite/${token}`;
-            const msg = {
-                to: user.email,
-                from: {
-                    name: this.sender.senderName,
-                    email: this.sender.senderEmail,
-                    ownerName: owner.display_name,
-                },
-                templateId: this.templates.SG_TP_INVITE_USER,
+        const link = `${this.CLIENT_URI}/auth/invite/${token}`;
+        const msg = {
+            to: user.email,
+            from: {
+                name: this.sender.senderName,
+                email: this.sender.senderEmail,
+                ownerName: owner.display_name,
+            },
+            templateId: this.templates.SG_TP_INVITE_USER,
 
-                dynamic_template_data: {
-                    user_name: user.user_name,
-                    link,
-                },
-            };
-            try {
-                const sendEmail = await SendGrid.send(msg);
-                resolve(sendEmail);
-            } catch (err) {
-                const error = {
-                    code: new HttpException('EMAIL.ERRORS.SEND.INVITE_USER', HttpStatus.BAD_REQUEST),
-                    err,
-                };
-                reject(error);
-            }
-        });
+            dynamic_template_data: {
+                user_name: user.user_name,
+                link,
+            },
+        };
+        try {
+            const sendEmail = await SendGrid.send(msg);
+            return sendEmail;
+        } catch (err) {
+            throw new CustomError({
+                message: 'EMAIL.ERRORS.SEND.INVITE_USER',
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                innerError: err,
+            });
+        }
     }
 }
