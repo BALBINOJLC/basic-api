@@ -97,16 +97,7 @@ export class AuthController {
         @Res() res: Response,
         @Body() body: { currentPassword: string; newPassword: string }
     ): Promise<Response> {
-        try {
-            const resp = await this._authService.changePassword(req, body.currentPassword, body.newPassword);
-            return res.json(resp);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
+        return RequestHandlerUtil.handleRequest(() => this._authService.changePassword(req, body.currentPassword, body.newPassword), res);
     }
 
     @Post('check')
@@ -205,15 +196,6 @@ export class AuthController {
 
     @Post('link/password')
     async passwordreset(@Body() body: PasswordForgotDto, @Res() res: Response): Promise<Response> {
-        try {
-            const resp = await this._authService.forgotPassword(body.email);
-            return res.json(resp);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code.status).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
+        return RequestHandlerUtil.handleRequest(() => this._authService.forgotPassword(body.email), res);
     }
 }

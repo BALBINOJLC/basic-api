@@ -182,73 +182,84 @@ export class AuthService {
     }
 
     async signInTwoAuth(code: string, email: string): Promise<ISingInSucces> {
-        return new Promise<ISingInSucces>(async (resolve, reject) => {
-            try {
-                const user = await this._userService.validate({ email });
+        try {
+            const user = await this._userService.validate({ email });
 
-                if (user) {
-                    const validateCode = await this.model.findOne({ code, email, is_deleted: false });
+            if (user) {
+                const validateCode = await this.model.findOne({ code, email, is_deleted: false });
 
-                    if (validateCode) {
-                        await this._userService.update(String(user._id), { last_login: new Date() }, String(user._id));
-                        const userJwt = userjwt(user);
-                        const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                        await this.model.findByIdAndUpdate(String(validateCode._id), {
-                            is_deleted: true,
-                            deleted_at: new Date(),
-                            code: `${validateCode.code}-is_deleted-${new Date().getTime()}`,
-                        });
-                        resolve({
-                            access_token: jwt.token,
-                            user,
-                            message: 'AUTH.SIGNIN_SUCCESS',
-                        });
-                    } else {
-                        const error = {
-                            code: new HttpException('AUTH.ERRORS.SIGNIN.TWOAUTH_CODE_INVALID', HttpStatus.BAD_REQUEST),
-                            err: null,
-                        };
-                        reject(error);
-                    }
-                } else {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.SIGNIN.USER_NOT_FOUND', HttpStatus.NOT_FOUND),
-                        err: null,
+                if (validateCode) {
+                    await this._userService.update(String(user._id), { last_login: new Date() }, String(user._id));
+                    const userJwt = userjwt(user);
+                    const jwt = this.fComomnAuth.createJwtPayload(userJwt);
+                    await this.model.findByIdAndUpdate(String(validateCode._id), {
+                        is_deleted: true,
+                        deleted_at: new Date(),
+                        code: `${validateCode.code}-is_deleted-${new Date().getTime()}`,
+                    });
+                    return {
+                        access_token: jwt.token,
+                        user,
+                        message: 'AUTH.SIGNIN_SUCCESS',
                     };
-                    reject(error);
+                } else {
+                    throw new CustomError({
+                        message: 'AUTH.ERRORS.SIGNIN.TWOAUTH_CODE_INVALID',
+                        statusCode: HttpStatus.NOT_FOUND,
+                        module: this.constructor.name,
+                    });
                 }
-            } catch (err) {
-                reject(err);
+            } else {
+                throw new CustomError({
+                    message: 'AUTH.ERRORS.SIGNIN.USER_NOT_FOUND',
+                    statusCode: HttpStatus.NOT_FOUND,
+                    module: this.constructor.name,
+                });
             }
-        });
+        } catch (err) {
+            throw new CustomError({
+                message: err.message,
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
     }
 
     async forgotPassword(email: string): Promise<{ message: string }> {
-        return new Promise<{ message: string }>(async (resolve, reject) => {
-            try {
-                const user = (await this._userService.findOne({ email }, 'email user_name role type')) as unknown as UserDocument;
-                if (user) {
-                    try {
-                        const token = this.jwtService.sign({ email: user.email });
-                        await this._emailService.forgotPassword(token, user);
-                        const resp = {
-                            message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
-                        };
-                        resolve(resp);
-                    } catch (err) {
-                        reject(err);
-                    }
-                } else {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.FORGOT_PASSWORD.USER_NOT_FOUND', HttpStatus.NOT_FOUND),
-                        err: null,
+        try {
+            const user = (await this._userService.findOne({ email }, 'email user_name role type')) as unknown as UserDocument;
+            if (user) {
+                try {
+                    const token = this.jwtService.sign({ email: user.email });
+                    await this._emailService.forgotPassword(token, user);
+                    const resp = {
+                        message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
                     };
-                    reject(error);
+                    return resp;
+                } catch (err) {
+                    throw new CustomError({
+                        message: err.message,
+                        statusCode: HttpStatus.BAD_REQUEST,
+                        module: this.constructor.name,
+                        innerError: err,
+                    });
                 }
-            } catch (err) {
-                reject(err);
+            } else {
+                throw new CustomError({
+                    message: 'AUTH.ERRORS.FORGOT_PASSWORD.USER_NOT_FOUND',
+                    statusCode: HttpStatus.NOT_FOUND,
+                    module: this.constructor.name,
+                });
             }
-        });
+        } catch (err) {
+            throw new CustomError({
+                message: err.message,
+                statusCode: HttpStatus.BAD_REQUEST,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
     }
 
     async checkToken(@Request() req: RequestWithUser): Promise<Record<string, unknown>> {
@@ -351,17 +362,19 @@ export class AuthService {
     }
 
     async changePassword(@Request() req: RequestWithUser, currentPassword: string, newPassword: string): Promise<{ message: string }> {
-        return new Promise<{ message: string }>(async (resolve, reject) => {
-            try {
-                const email = req.user.email;
-
-                const validateUser = await this.validateUser(email, currentPassword);
-                await this.validateSamePassword(newPassword, validateUser.password);
-                resolve({ message: 'ok' });
-            } catch (err) {
-                reject(err);
-            }
-        });
+        try {
+            const email = req.user.email;
+            const validateUser = await this.validateUser(email, currentPassword);
+            await this.validateSamePassword(newPassword, validateUser.password);
+            return { message: 'ok' };
+        } catch (error) {
+            throw new CustomError({
+                message: error.message,
+                statusCode: error.statusCode,
+                module: this.constructor.name,
+                innerError: error,
+            });
+        }
     }
 
     async setNewPasswordAdmin(email: string, passwrod: string): Promise<{ message: string }> {
