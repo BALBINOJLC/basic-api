@@ -174,7 +174,7 @@ export class AuthService {
         } catch (err) {
             throw new CustomError({
                 message: err.message,
-                statusCode: HttpStatus.BAD_REQUEST,
+                statusCode: err.statusCode,
                 module: this.constructor.name,
                 innerError: err,
             });
