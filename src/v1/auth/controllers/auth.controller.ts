@@ -73,16 +73,7 @@ export class AuthController {
         @Res() res: Response
     ): Promise<Response> {
         const { password } = body;
-        try {
-            const resp = await this._authService.resetPassword(token, password.password);
-            return res.json(resp);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
+        return RequestHandlerUtil.handleRequest(() => this._authService.resetPassword(token, password.password), res);
     }
 
     @Post('change-password')

@@ -336,29 +336,31 @@ export class AuthService {
     }
 
     async resetPassword(token: string, password: string): Promise<{ message: string }> {
-        return new Promise<{ message: string }>(async (resolve, reject) => {
-            try {
-                const payload = this.jwtService.verify(token);
-                const user = await this._userService.findOne({ email: payload.email });
-                if (user) {
-                    await this.validateSamePassword(password, user.password);
-                    const newPassword = await bcrypt.hash(password.toString(), 10);
-                    await this._userService.update(String(user._id), { password: newPassword }, String(user._id));
-                    const resp = {
-                        message: 'AUTH.PASSWORD_RESET_SUCCESS',
-                    };
-                    resolve(resp);
-                } else {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.RESET_PASSWORD.USER_NOT_FOUND', HttpStatus.NOT_FOUND),
-                        err: null,
-                    };
-                    reject(error);
-                }
-            } catch (err) {
-                reject(err);
+        try {
+            const payload = this.jwtService.verify(token);
+            const user = await this._userService.findOne({ email: payload.email });
+            if (user) {
+                await this.validateSamePassword(password, user.password);
+                await this._userService.update(String(user._id), { password }, String(user._id));
+                const resp = {
+                    message: 'AUTH.PASSWORD_RESET_SUCCESS',
+                };
+                return resp;
+            } else {
+                throw new CustomError({
+                    message: 'AUTH.ERRORS.RESET_PASSWORD.USER_NOT_FOUND',
+                    statusCode: HttpStatus.NOT_FOUND,
+                    module: this.constructor.name,
+                });
             }
-        });
+        } catch (err) {
+            throw new CustomError({
+                message: err.message,
+                statusCode: err.statusCode,
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
     }
 
     async changePassword(@Request() req: RequestWithUser, currentPassword: string, newPassword: string): Promise<{ message: string }> {
@@ -454,19 +456,17 @@ export class AuthService {
     }
 
     private async validateSamePassword(password: string, hashPassword: string): Promise<boolean> {
-        return new Promise<boolean>(async (resolve, reject) => {
-            const passwordValidation = await bcrypt.compare(password, hashPassword);
+        const passwordValidation = (await bcrypt.compare(password, hashPassword)) as boolean;
 
-            if (passwordValidation) {
-                const error = {
-                    code: new HttpException('AUTH.ERRORS.PASSWORD_SAME_OLD', HttpStatus.CONFLICT),
-                    err: null,
-                };
-                reject(error);
-            } else {
-                resolve(passwordValidation);
-            }
-        });
+        if (passwordValidation) {
+            throw new CustomError({
+                message: 'AUTH.ERRORS.PASSWORD_SAME_OLD',
+                statusCode: HttpStatus.CONFLICT,
+                module: this.constructor.name,
+            });
+        } else {
+            return passwordValidation;
+        }
     }
 
     private async validateUserSocial(email: string, isVerified: boolean) {
