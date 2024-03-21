@@ -1,5 +1,4 @@
 export interface ISendgridTemplates {
-    SG_TP_VERIFY_ACCOUNT: string;
-    SG_TP_RESET_PASSWORD: string;
-    SG_TP_INVITE_USER: string;
+    BV_TP_VERIFY_ACCOUNT: number;
+    BV_TP_RESET_PASSWORD: number;
 }

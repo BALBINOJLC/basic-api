@@ -40,10 +40,7 @@
         "@nestjs/swagger": "^7.1.8",
         "@nestjs/websockets": "^10.2.1",
         "@nestjsx/crud": "^5.0.0-alpha.3",
-        "@sendgrid/mail": "^7.7.0",
-        "@shopify/shopify-api": "^7.5.2",
         "@types/sharp": "^0.31.1",
-        "aws-sdk": "^2.1442.0",
         "axios": "^1.4.0",
         "bcrypt": "^5.1.1",
         "class-transformer": "^0.5.1",
@@ -70,11 +67,10 @@
         "rimraf": "^5.0.1",
         "rxjs": "^7.8.1",
         "sharp": "^0.32.5",
+        "sib-api-v3-typescript": "^2.2.2",
         "standard-version": "^9.5.0",
         "swagger-ui-express": "^5.0.0",
-        "transbank-sdk": "^4.0.0",
-        "twilio": "^4.19.0",
-        "xlsx": "^0.18.5"
+        "twilio": "^4.19.0"
     },
     "devDependencies": {
         "@commitlint/cli": "^18.4.4",

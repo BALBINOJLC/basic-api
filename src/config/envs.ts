@@ -24,13 +24,12 @@ export const envs = {
         twilio_phone: process.env.TWILIO_PHONE,
     },
 
-    sendgrid: {
-        api_key: process.env.SENDGRID_API_KEY,
+    brevo: {
+        api_key: process.env.BV_API_KEY,
         templates: {
             auth: {
-                verify_account: process.env.SENDGRID_VERIFY_ACCOUNT,
-                invite_user: process.env.SENDGRID_INVITE_USER,
-                reset_password: process.env.SENDGRID_RESET_PASSWORD,
+                verify_account: process.env.BV_VERIFY_ACCOUNT,
+                reset_password: process.env.BV_RESET_PASSWORD,
             },
         },
     },

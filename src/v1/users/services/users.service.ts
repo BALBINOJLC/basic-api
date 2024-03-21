@@ -138,7 +138,7 @@ export class UserService implements IUserRepository {
             return userDB;
         } catch (err) {
             throw new CustomError({
-                message: 'USER.ERRORS.CREATE',
+                message: 'USER.ERRORS.CREATED',
                 statusCode: HttpStatus.BAD_REQUEST,
                 module: this.constructor.name,
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
