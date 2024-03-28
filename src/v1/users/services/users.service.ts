@@ -290,7 +290,7 @@ export class UserService implements IUserRepository {
 
     private buildQuery(filter: UserFilterDto, user: IUserToken): UserFilterDto {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const query: any = { ...filter, isDeleted: false };
+        const query: any = { ...filter, is_deleted: false };
 
         console.log('user', user);
 
