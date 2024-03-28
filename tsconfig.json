@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "sourceMap": true,
         "declaration": true,
         "removeComments": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
-        "target": "es2017",
-        "sourceMap": true,
+        "target": "ES2021",
         "outDir": "./dist",
         "baseUrl": "./",
         "incremental": true,

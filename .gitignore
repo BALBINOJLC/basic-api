@@ -4,7 +4,7 @@
 globalConfig.json
 
 # Logs
-logs
+
 *.log
 npm-debug.log*
 pnpm-debug.log*
@@ -35,8 +35,8 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-!.vscode/extensions.json
 !nest.code-snippets
+
 globalConfig.json
 *.env
 db/*

@@ -1,8 +1,8 @@
 {
-    "name": "ms-api-base-startups-cell",
-    "version": "0.0.1",
-    "description": "",
-    "author": "",
+    "name": "api-sicrus-teams",
+    "version": "0.0.73",
+    "description": "Api for sicrus teams, a platform for teams to manage their projects and tasks",
+    "author": "sicrux.tech",
     "private": true,
     "license": "MIT",
     "scripts": {
@@ -23,8 +23,8 @@
         "test:e2e": "jest --config ./test/jest-e2e.json",
         "prepare": "husky install",
         "release": "standard-version",
-        "update:remotes": "git submodule update --init --recursive && git submodule foreach --recursive git pull origin main && sh ./scripts/update-remotes.sh",
-        "deploy:staging": "yarn test && git checkout staging && git merge develop && yarn build && yarn release && git push --follow-tags origin staging && bash ./scripts/deploy.bash -d staging && git checkout develop && git merge staging && git push"
+        "deploy:staging": "yarn test && git checkout staging && git merge develop && yarn build && yarn release && git push --follow-tags origin staging && bash ./scripts/deploy.bash -d staging && git checkout develop && git merge staging && git push",
+        "deploy:main": "yarn test && git checkout main && git merge develop && yarn build && yarn release && git push --follow-tags origin main && bash ./scripts/deploy.bash -d production && git checkout develop && git merge main && git push"
     },
     "dependencies": {
         "@casl/ability": "^6.5.0",
@@ -35,7 +35,7 @@
         "@nestjs/mapped-types": "^2.0.2",
         "@nestjs/mongoose": "^10.0.1",
         "@nestjs/passport": "^10.0.1",
-        "@nestjs/platform-express": "^10.2.1",
+        "@nestjs/platform-express": "^10.3.1",
         "@nestjs/platform-socket.io": "^10.2.1",
         "@nestjs/swagger": "^7.1.8",
         "@nestjs/websockets": "^10.2.1",
@@ -48,6 +48,7 @@
         "dotenv": "^16.4.5",
         "error-stack-parser": "^2.1.4",
         "express": "^4.18.2",
+        "fastest-levenshtein": "^1.0.16",
         "file-type": "^18.5.0",
         "firebase-admin": "^11.10.1",
         "form-data": "^4.0.0",
@@ -56,8 +57,10 @@
         "lodash": "^4.17.21",
         "moment": "^2.29.4",
         "mongoose": "^7.4.4",
-        "mongoose-autopopulate": "^1.0.1",
+        "mongoose-autopopulate": "^1.1.0",
+        "multer": "^1.4.5-lts.1",
         "nestjs-pino": "^3.4.0",
+        "node-cron": "^3.0.3",
         "passport": "^0.6.0",
         "passport-jwt": "^4.0.1",
         "passport-local": "^1.0.0",

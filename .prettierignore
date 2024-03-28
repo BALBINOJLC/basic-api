@@ -1,4 +1,4 @@
 # Ignore artifacts:
-src/interfaces/*
+start
+*enum.ts
 src/models/*
-*interface.ts
