@@ -11,6 +11,8 @@ const eventsShema = Joi.object({
     LOGGER_LEVEL: Joi.string().valid('error', 'warn', 'info', 'debug', 'log', 'silent').default('silent'),
     LOGGER_PRETTY_PRINT: Joi.boolean().default(true),
     JWT_KEY: Joi.string().required(),
+    DB_URL: Joi.string().required(),
+    DB_NAME: Joi.string().required(),
 });
 
 const { error } = eventsShema.validate(process.env, { allowUnknown: true });

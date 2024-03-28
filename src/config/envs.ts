@@ -7,6 +7,8 @@ export const envs = {
         prefix: envVars.API_PREFIX,
         api_uri: envVars.API_URI,
         client_uri: envVars.CLIENT_URI,
+        db_uri: envVars.DB_URL as string,
+        db_name: envVars.DB_NAME,
     },
 
     logger: {

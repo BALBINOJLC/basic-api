@@ -5,8 +5,6 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
-import { LoggerModule } from 'nestjs-pino';
-
 export const AppImports = [
     ConfigModule.forRoot({
         isGlobal: true,
@@ -24,11 +22,5 @@ export const AppImports = [
                 return connection;
             },
         }),
-    }),
-
-    LoggerModule.forRoot({
-        pinoHttp: {
-            level: process.env.LOGGER_LEVEL,
-        },
     }),
 ];

@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Logger } from 'nestjs-pino';
 import { HealthDto } from './health.dto';
 
 @Injectable()
 export class HealthService {
-    constructor(
-        private configService: ConfigService,
-        private logger: Logger
-    ) {}
+    logger: Logger;
+
+    constructor(private configService: ConfigService) {
+        this.logger = new Logger('HealthCheck');
+    }
 
     getHealthCheck(): HealthDto {
         this.logger.log('getHealthCheck in version %o', `${HealthService.name}:${this.getHealthCheck.name}`, process.version);

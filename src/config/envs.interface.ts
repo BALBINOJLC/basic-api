@@ -7,6 +7,8 @@ export interface EnvVars {
     LOGGER_LEVEL: string;
     LOGGER_PRETTY_PRINT: string;
     JWT_KEY: string;
+    DB_URL: string;
+    DB_NAME: string;
 }
 
 export interface NodeEnv {
@@ -15,6 +17,8 @@ export interface NodeEnv {
     prefix: EnvVars['API_PREFIX'];
     api_uri: EnvVars['API_URI'];
     client_uri: EnvVars['CLIENT_URI'];
+    db_uri: EnvVars['DB_URL'];
+    db_name: EnvVars['DB_NAME'];
 }
 
 export interface LoggerEnv {
