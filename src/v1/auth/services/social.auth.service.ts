@@ -2,11 +2,11 @@ import { SignUpDto } from '../dtos';
 
 import * as admin from 'firebase-admin';
 import { NetworksEnum } from '../enums';
-import { DecodedToken, ISingUpSucces, ISocialUser } from '../interfaces';
-import { ValidationResult, userjwt } from '@base';
+import { DecodedToken, ISingUpSucces, ISocialUser, ValidationResult } from '../interfaces';
 import { IUser, UserCreateDto, UserRolesEnum, UserService, UserTypesEnum } from '@users';
 import { CommonAuthServise } from './comom.auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { userjwt } from '@helpers';
 
 export class SocialAuthService {
     fComomnAuth = new CommonAuthServise(this.jwtService);

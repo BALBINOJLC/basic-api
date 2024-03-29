@@ -15,12 +15,10 @@
         "skipLibCheck": true,
         "allowJs": true,
         "paths": {
-            "@base": ["src/@base/index"],
-            "@modules": ["src/@modules/index"],
-            "@utils": ["src/@base/utils/index"],
+            "@common": ["src/common/index"],
+            "@helpers": ["src/common/helpers/index"],
             "@casl": ["src/casl/index"],
             "@health": ["src/health/index"],
-            "@pipes": ["src/pipes/index"],
             "@users": ["src/v1/users/index"],
             "@auth": ["src/v1/auth/index"],
             "@email": ["src/v1/email/index"]

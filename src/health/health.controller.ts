@@ -1,8 +1,9 @@
 import { Controller, Get, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { apiResponseWrapper, apiErrorWrapper, ErrorResponseDto } from '@utils';
 import { HealthService } from './health.service';
 import { HealthDto } from './health.dto';
+import { ErrorResponseDto } from '@common';
+import { apiResponseWrapper, apiErrorWrapper } from '@helpers';
 
 @ApiTags('Health')
 @Controller({

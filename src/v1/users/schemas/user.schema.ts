@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { PhotoDto } from '@utils';
 import { UserRolesEnum, UserTypesEnum } from '../enums';
+import { PhotoDto } from '@common';
 
 export const UserSchemaName = 'UserSchema';
 @Schema({ collection: 'users', timestamps: true })

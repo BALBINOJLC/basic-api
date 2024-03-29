@@ -1,16 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { CustomError, IJwtUser, IUserToken, ParamsDto, hassPassword, userNameAndCharter, userjwt } from '@utils';
 import { JwtService } from '@nestjs/jwt';
 import { IUserRepository } from '../repositories';
 import { UserDocument, UserSchemaName } from '../schemas';
 import { UserCreateDto, UserFilterDto, UserUpdateDto } from '../dtos';
 import { IRespFindAllUsers, IUser, IUserUpdated } from '../interfaces';
 import { UserTypesEnum, UserRolesEnum } from '../enums';
+import { IJwtUser } from '@auth';
+import { ParamsDto, IUserToken } from '@common';
+import { CustomError, hassPassword, userNameAndCharter, userjwt } from '@helpers';
 
 @Injectable()
 export class UserService implements IUserRepository {
@@ -73,11 +74,11 @@ export class UserService implements IUserRepository {
                 .or([{ first_name: regExp }, { last_name: regExp }, { display_name: regExp }, { email: regExp }])
                 .countDocuments();
 
-            const data = await this.model
+            const data = (await this.model
                 .find(query)
                 .or([{ first_name: regExp }, { last_name: regExp }, { display_name: regExp }, { email: regExp }])
                 .sort({ [newSort.field]: newSort.order })
-                .exec();
+                .exec()) as IUser[];
 
             if (length == 0) {
                 throw new CustomError({
@@ -110,7 +111,7 @@ export class UserService implements IUserRepository {
         };
 
         try {
-            const data = await this.model.findOne(query, fields).exec();
+            const data = (await this.model.findOne(query, fields).exec()) as IUser;
             if (data) {
                 return data;
             } else {
@@ -134,14 +135,13 @@ export class UserService implements IUserRepository {
         try {
             const newUserDetails = this.prepareNewUserDetails(input);
             const newUser = new this.model(newUserDetails);
-            const userDB: IUser = await newUser.save();
+            const userDB: IUser = (await newUser.save()) as IUser;
             return userDB;
         } catch (err) {
             throw new CustomError({
                 message: 'USER.ERRORS.CREATED',
                 statusCode: HttpStatus.BAD_REQUEST,
                 module: this.constructor.name,
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 innerError: err,
             });
         }
@@ -256,7 +256,7 @@ export class UserService implements IUserRepository {
     }
 
     private async persistUserUpdate(id: string, input: UserUpdateDto, userId: string): Promise<IUser> {
-        const data = await this.model.findByIdAndUpdate(id, input, { new: true });
+        const data = (await this.model.findByIdAndUpdate(id, input, { new: true })) as unknown as IUser;
         if (!data) {
             throw new Error('User not found or update failed');
         }
@@ -288,12 +288,10 @@ export class UserService implements IUserRepository {
         };
     }
 
+    // eslint-disable-next-line no-unused-vars, unused-imports/no-unused-vars, @typescript-eslint/no-unused-vars
     private buildQuery(filter: UserFilterDto, user: IUserToken): UserFilterDto {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const query: any = { ...filter, is_deleted: false };
-
-        console.log('user', user);
-
         Object.keys(filter).forEach((key) => {
             if (Array.isArray(filter[key])) {
                 query[key] = { $in: filter[key] };
@@ -302,7 +300,7 @@ export class UserService implements IUserRepository {
             }
         });
 
-        console.dir(query, { depth: null });
+        // console.dir(query, { depth: null });
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return query;
     }

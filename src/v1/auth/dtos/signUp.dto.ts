@@ -1,9 +1,10 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { UserCreateDto } from '@users';
-import { PhotoDto } from '@utils';
+
 import { Type } from 'class-transformer';
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { NetworksEnum } from '../enums';
+import { PhotoDto } from '@common';
 
 export class SignUpDto extends PartialType(UserCreateDto) {
     @ApiProperty({

@@ -1,12 +1,11 @@
+import { IFile } from '@common';
 import { IUser, UserRolesEnum, UserTypesEnum } from '../../users';
 import { NetworksEnum } from '../enums';
-import { IFile } from '@base';
 
 export interface IJwtUser {
     _id: string;
     display_name: string;
     email: string;
-    team: string | null;
     iat?: Date;
     password?: string;
     role?: UserRolesEnum;
@@ -47,4 +46,9 @@ export interface DecodedToken {
     email_verified: boolean;
     name: string;
     picture?: string;
-  }
+}
+
+export interface ValidationResult {
+    isValid: boolean;
+    user: IUser;
+}

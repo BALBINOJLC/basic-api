@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable max-lines */
 import { HttpException, HttpStatus, Injectable, Request } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { IUser, UserCreateDto, UserDocument, UserRolesEnum, UserService, UserTypesEnum } from '@users';
 import { SignUpDto } from '../dtos';
-import { CustomError, RequestWithUser, generateUniqueRandomNumber, userjwt } from '@utils';
 
 import { Twilio } from 'twilio';
 import { envs } from 'src/config/envs';
@@ -24,6 +20,8 @@ import { NetworksEnum } from '../enums';
 import { SocialAuthService } from './social.auth.service';
 import { CommonAuthServise } from './comom.auth.service';
 import { EmailService } from '@email';
+import { RequestWithUser } from '@common';
+import { userjwt, CustomError, generateUniqueRandomNumber } from '@helpers';
 
 @Injectable()
 export class AuthService {

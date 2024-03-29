@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard, ParamsDto, RequestHandlerUtil, RequestWithUser } from '@utils';
 import { UserCreateDto, UserFilterDto, UserUpdateDto } from '../dtos';
 import { Response } from 'express';
 import { UserService } from '../services';
+import { JwtAuthGuard, ParamsDto, RequestWithUser } from '@common';
+import { RequestHandlerUtil } from '@helpers';
+import { UserRolesEnum } from '../enums';
 
 @ApiTags('Users')
 @Controller({
@@ -27,14 +29,20 @@ export class UserController {
         @Req() req: RequestWithUser
     ): Promise<Response> {
         const { user } = req;
-        if (user.role === 'USER') {
+        if (user.role === UserRolesEnum.USER) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        if (user.role === 'ADMIN') {
+        if (user.role === UserRolesEnum.ADMIN) {
             params.fields = 'first_name last_name email role phone display_name photo_url';
         }
 
-        return RequestHandlerUtil.handleRequest(() => this._userService.findAll(query, params, user), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._userService.findAll(query, params, user),
+            res: res,
+            userName: user.user_name,
+            actionDescription: 'Get All Users',
+            module: this.constructor.name,
+        });
     }
 
     @Get('/search/:limit/:offset/:sort/:regexp/:fields?')
@@ -53,7 +61,12 @@ export class UserController {
     ): Promise<Response> {
         const { user } = req;
         const regExp = new RegExp(regexp, 'i');
-        return RequestHandlerUtil.handleRequest(() => this._userService.search(query, regExp, params, user), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._userService.search(query, regExp, params, user),
+            res: res,
+            userName: user.user_name,
+            module: this.constructor.name,
+        });
     }
 
     @Get(':fields?')
@@ -71,14 +84,22 @@ export class UserController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     async findOne(@Query() query: UserFilterDto, @Param('fields') fields: string, @Res() res: Response): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._userService.findOne(query, fields), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._userService.findOne(query, fields),
+            res: res,
+            module: this.constructor.name,
+        });
     }
 
     @Post('create')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     async signup(@Body() body: UserCreateDto, @Res() res: Response): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._userService.create(body), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._userService.create(body),
+            res: res,
+            module: this.constructor.name,
+        });
     }
 
     @Put(':id')
@@ -95,7 +116,11 @@ export class UserController {
         @Req() req: RequestWithUser
     ): Promise<Response> {
         const { user } = req;
-        return RequestHandlerUtil.handleRequest(() => this._userService.update(id, body, user._id, user.type), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._userService.update(id, body, user._id, user.type),
+            res: res,
+            module: this.constructor.name,
+        });
     }
 
     @Put('/masive')
@@ -104,7 +129,11 @@ export class UserController {
     async updateMasive(@Body() body: UserUpdateDto, @Res() res: Response, @Req() req: RequestWithUser): Promise<Response> {
         const { user } = req;
         if (user.type === 'OWNER') {
-            return RequestHandlerUtil.handleRequest(() => this._userService.updateMasive(body), res);
+            return RequestHandlerUtil.handleRequest({
+                action: () => this._userService.updateMasive(body),
+                res: res,
+                module: this.constructor.name,
+            });
         } else {
             return res.status(401).json({ message: 'Unauthorized' });
         }
@@ -118,6 +147,10 @@ export class UserController {
         description: 'Delete a User',
     })
     async delete(@Param('id') id: string, @Res() res: Response): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._userService.delete(id), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._userService.delete(id),
+            res: res,
+            module: this.constructor.name,
+        });
     }
 }

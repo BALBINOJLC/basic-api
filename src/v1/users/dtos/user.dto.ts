@@ -10,7 +10,7 @@ import {
     IsEnum,
     ValidateNested,
 } from 'class-validator';
-import { PhotoDto } from '@utils';
+import { PhotoDto } from '@common';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { NetworksEnum, UserRolesEnum, UserTypesEnum } from '../enums';

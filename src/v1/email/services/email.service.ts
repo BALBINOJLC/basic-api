@@ -1,12 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { envs } from 'src/config/envs';
 import { IResponseEmail, ISenderSendgrid, ISendgridTemplates } from '../interfaces';
 import { IUser, UserDocument } from '@users';
-import { CustomError } from '@utils';
 import * as SibApiV3Sdk from 'sib-api-v3-typescript';
+import { CustomError } from '@helpers';
 
 @Injectable()
 export class EmailService {

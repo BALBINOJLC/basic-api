@@ -1,10 +1,11 @@
 import { Body, Post, UseGuards, Request, Get, Res, Query, Controller, Param, Req } from '@nestjs/common';
-import { JwtAuthGuard, RequestHandlerUtil, RequestWithUser } from '@utils';
 import { AuthService } from '../services';
 import { ApiBasicAuth, ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
 import { PasswordForgotDto, SignInTwoAuth, SignUpDto } from '../dtos';
 import { Response } from 'express';
+import { JwtAuthGuard, RequestWithUser } from '@common';
+import { RequestHandlerUtil } from '@helpers';
 
 @ApiTags('AUTH')
 @Controller({
@@ -29,7 +30,11 @@ export class AuthController {
         @Param('sendemail') sendemail: boolean,
         @Res() res: Response
     ): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._authService.signUp(body, invited, sendemail), res, 201);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.signUp(body, invited, sendemail),
+            res,
+            module: this.constructor.name,
+        });
     }
 
     @Post('signin')
@@ -39,7 +44,11 @@ export class AuthController {
         description: 'Sign In with email and password',
     })
     async signin(@Request() req: RequestWithUser, @Res() res: Response): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._authService.signIn(req), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.signIn(req),
+            res,
+            module: this.constructor.name,
+        });
     }
 
     @Post('signin/twoauth')
@@ -73,7 +82,11 @@ export class AuthController {
         @Res() res: Response
     ): Promise<Response> {
         const { password } = body;
-        return RequestHandlerUtil.handleRequest(() => this._authService.resetPassword(token, password.password), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.resetPassword(token, password.password),
+            res,
+            module: this.constructor.name,
+        });
     }
 
     @Post('change-password')
@@ -88,7 +101,11 @@ export class AuthController {
         @Res() res: Response,
         @Body() body: { currentPassword: string; newPassword: string }
     ): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._authService.changePassword(req, body.currentPassword, body.newPassword), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.changePassword(req, body.currentPassword, body.newPassword),
+            res,
+            module: this.constructor.name,
+        });
     }
 
     @Post('check')
@@ -187,6 +204,10 @@ export class AuthController {
 
     @Post('link/password')
     async passwordreset(@Body() body: PasswordForgotDto, @Res() res: Response): Promise<Response> {
-        return RequestHandlerUtil.handleRequest(() => this._authService.forgotPassword(body.email), res);
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.forgotPassword(body.email),
+            res,
+            module: this.constructor.name,
+        });
     }
 }
