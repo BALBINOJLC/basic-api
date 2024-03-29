@@ -41,4 +41,14 @@ export class ParamsDto {
         example: '{"field":"name","order":1}',
     })
     sort?: string;
+
+    @IsOptional()
+    @IsString()
+    @ApiProperty({
+        type: String,
+        required: false,
+        description: 'Fields to return',
+        example: 'name,lastname,age,address',
+    })
+    regexp?: string;
 }
