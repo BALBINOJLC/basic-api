@@ -9,8 +9,7 @@ const eventsShema = Joi.object({
     API_URI: Joi.string().required(),
     CLIENT_URI: Joi.string().required(),
     JWT_KEY: Joi.string().required(),
-    DB_URL: Joi.string().required(),
-    DB_NAME: Joi.string().required(),
+    DATABASE_URL: Joi.string().required(),
 });
 
 const { error } = eventsShema.validate(process.env, { allowUnknown: true });
