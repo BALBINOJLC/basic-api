@@ -1,4 +1,4 @@
-export enum SortUserEnum {
+export enum ESortUserEnum {
     USER_NAME = 'user_name',
     DISPLAY_NAME = 'display_name',
     EMAIL = 'email',
