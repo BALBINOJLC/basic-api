@@ -1,4 +1,4 @@
-import { envVars } from './envs.validatios';
+import { envVars } from './envs.validations';
 
 export const envs = {
     node: {
