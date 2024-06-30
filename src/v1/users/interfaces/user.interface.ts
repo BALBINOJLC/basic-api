@@ -36,6 +36,6 @@ export interface IRespFindAllUsers extends ResponseList {
     data: IUser[];
 }
 
-export interface ResponseDeleted {
+export interface IResponseDeleted {
     message: string;
 }
