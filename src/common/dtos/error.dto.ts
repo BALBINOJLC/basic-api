@@ -31,7 +31,7 @@ export class ErrorResponseDto {
     details: any[] | null;
 }
 
-export interface Errordata {
+export interface IErrordata {
     message: string;
     statusCode: number;
     module: string;

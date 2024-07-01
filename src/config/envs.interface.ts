@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export interface IEnvVars {
     API_ENV: string;
     API_PORT: string;
@@ -31,12 +32,16 @@ export interface ITwilioEnv {
 
 export interface IBrevoEnv {
     api_key: IEnvVars['BV_API_KEY'];
-    templates: {
-        auth: {
-            verify_account: IEnvVars['BV_VERIFY_ACCOUNT'];
-            reset_password: IEnvVars['BV_RESET_PASSWORD'];
-        };
-    };
+    templates: IBrevoTemplates;
+}
+
+export interface IBrevoTemplates {
+    auth: IBrevoTemplatesAuth;
+}
+
+export interface IBrevoTemplatesAuth {
+    verify_account: IEnvVars['BV_VERIFY_ACCOUNT'];
+    reset_password: IEnvVars['BV_RESET_PASSWORD'];
 }
 
 export interface IJwtEnv {

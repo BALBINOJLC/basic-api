@@ -1,1 +1,1 @@
-export * from './custom-error.class';
+export * from './custom.exception.http';

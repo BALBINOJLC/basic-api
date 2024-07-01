@@ -1,11 +1,10 @@
-import { Body, Post, UseGuards, Request, Get, Res, Query, Controller, Param, Req } from '@nestjs/common';
+import { Body, Post, UseGuards, Request, Res, Query, Controller, Req, HttpStatus } from '@nestjs/common';
 import { AuthService } from '../services';
-import { ApiBasicAuth, ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
-import { PasswordForgotDto, SignInTwoAuth, SignUpDto } from '../dtos';
 import { Response } from 'express';
-import { JwtAuthGuard, RequestWithUser } from '@common';
-import { RequestHandlerUtil } from '@helpers';
+import { JwtAuthGuard, IRequestWithUser, RequestHandlerUtil, CustomError } from '@common';
+import { RegisterUserDto } from '../dtos';
 
 @ApiTags('AUTH')
 @Controller({
@@ -19,62 +18,25 @@ export class AuthController {
         this.CLIENT_URI = envs.node.client_uri;
     }
 
-    @Post('signup/:invited/:sendemail')
-    @ApiOperation({
-        summary: 'Sign Up',
-        description: 'Sign Up',
-    })
-    async signup(
-        @Body() body: SignUpDto,
-        @Param('invited') invited: boolean,
-        @Param('sendemail') sendemail: boolean,
-        @Res() res: Response
-    ): Promise<Response> {
+    @Post('signup')
+    async signup(@Body() body: RegisterUserDto, @Res() res: Response): Promise<Response> {
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.signUp(body, invited, sendemail),
+            action: () => this._authService.registerUser(body),
             res,
             module: this.constructor.name,
         });
     }
 
     @Post('signin')
-    @ApiBasicAuth()
-    @ApiOperation({
-        summary: 'Basic Auth',
-        description: 'Sign In with email and password',
-    })
-    async signin(@Request() req: RequestWithUser, @Res() res: Response): Promise<Response> {
+    async signin(@Request() req: IRequestWithUser, @Res() res: Response): Promise<Response> {
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.signIn(req),
+            action: () => this._authService.loginUser(req),
             res,
             module: this.constructor.name,
         });
     }
 
-    @Post('signin/twoauth')
-    @ApiBasicAuth()
-    @ApiOperation({
-        summary: 'Validate Code',
-        description: 'Validate Code',
-    })
-    async signInTwoAuth(@Body() body: SignInTwoAuth, @Res() res: Response): Promise<Response> {
-        try {
-            const resp = await this._authService.signInTwoAuth(body.code, body.email);
-            return res.json(resp);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
-    }
-
     @Post('reset-password')
-    @ApiOperation({
-        summary: 'Reset Password',
-        description: 'Reset Password',
-    })
     async passwordresetToken(
         @Body() body: { password: { password: string } },
         @Query('token') token: string,
@@ -97,7 +59,7 @@ export class AuthController {
         description: 'Change Password',
     })
     async changePassword(
-        @Request() req: RequestWithUser,
+        @Request() req: IRequestWithUser,
         @Res() res: Response,
         @Body() body: { currentPassword: string; newPassword: string }
     ): Promise<Response> {
@@ -105,26 +67,8 @@ export class AuthController {
             action: () => this._authService.changePassword(req, body.currentPassword, body.newPassword),
             res,
             module: this.constructor.name,
+            actionDescription: 'Change Password',
         });
-    }
-
-    @Post('check')
-    @UseGuards(JwtAuthGuard)
-    @ApiOperation({
-        summary: 'Check Token',
-        description: 'Check if token is valid',
-    })
-    async checkToken(@Request() req: RequestWithUser, @Res() res: Response): Promise<Response> {
-        try {
-            const resp = await this._authService.checkToken(req);
-            return res.json(resp);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
     }
 
     @Post('password/set')
@@ -133,18 +77,20 @@ export class AuthController {
     async setNewPasswordAdmin(
         @Body() body: { email: string; password: string },
         @Res() res: Response,
-        @Req() req: RequestWithUser
+        @Req() req: IRequestWithUser
     ): Promise<Response> {
         const { email, password } = body;
         try {
             const { user } = req;
-            if (user.role === 'SUPER_ADMIN') {
-                const resp = await this._authService.setNewPasswordAdmin(email, password);
-                return res.json(resp);
-            } else {
-                const error = { code: { status: 401, message: 'AUTH.UNAUTHORIZED' } };
-                return res.status(401).json(error);
+            if (user.Profiles.findIndex((profile) => profile.role === 'OWNER') === -1) {
+                throw new CustomError({
+                    statusCode: HttpStatus.UNAUTHORIZED,
+                    message: 'AUTH.UNAUTHORIZED',
+                    module: this.constructor.name,
+                });
             }
+            const resp = await this._authService.setNewPasswordAdmin(email, password);
+            return res.json(resp);
         } catch (error: unknown) {
             if (error instanceof Error) {
                 return res.status((error as any).code.status).json(error);
@@ -152,62 +98,5 @@ export class AuthController {
                 return res.status(500).json(error);
             }
         }
-    }
-
-    @Get('activateaccount/:token')
-    @ApiParam({
-        name: 'token',
-        description: 'User Token',
-        required: true,
-    })
-    @ApiOperation({
-        summary: 'Activate Account',
-        description: 'Activate Account',
-    })
-    async activateAccount(@Request() req: RequestWithUser, @Res() res: Response): Promise<void | Record<string, any>> {
-        const { token } = req.params;
-        try {
-            await this._authService.activateAccount(token);
-            return res.redirect(`${this.CLIENT_URI}/auth/sign-in`);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
-    }
-
-    @Get('activateaccountinvited/:token')
-    @ApiParam({
-        name: 'token',
-        description: 'User Token',
-        required: true,
-    })
-    @ApiOperation({
-        summary: 'Activate Invited Account',
-        description: 'Activate Invited Account',
-    })
-    async activateAccountInvited(@Request() req: RequestWithUser, @Res() res: Response): Promise<void | Record<string, any>> {
-        const { token } = req.params;
-        try {
-            await this._authService.activateAccount(token);
-            return res.redirect(`${this.CLIENT_URI}/auth/sign-in`);
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                return res.status((error as any).code?.status || 500).json(error);
-            } else {
-                return res.status(500).json(error);
-            }
-        }
-    }
-
-    @Post('link/password')
-    async passwordreset(@Body() body: PasswordForgotDto, @Res() res: Response): Promise<Response> {
-        return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.forgotPassword(body.email),
-            res,
-            module: this.constructor.name,
-        });
     }
 }

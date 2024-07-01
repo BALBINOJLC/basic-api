@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { envs } from 'src/config/envs';
 import { IResponseEmail, ISenderSendgrid, ISendgridTemplates } from '../interfaces';
-import { IUser, UserDocument } from '@users';
+import { IUser } from '@users';
 import * as SibApiV3Sdk from 'sib-api-v3-typescript';
-import { CustomError } from '@helpers';
+import { CustomError } from '@common';
 
 @Injectable()
 export class EmailService {
@@ -89,7 +89,7 @@ export class EmailService {
         }
     }
 
-    async forgotPassword(token: string, user: UserDocument): Promise<unknown> {
+    async forgotPassword(token: string, user: IUser): Promise<unknown> {
         const link = `${this.CLIENT_URI}/auth/reset-password/${token}`;
 
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();

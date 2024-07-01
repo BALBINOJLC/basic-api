@@ -15,6 +15,7 @@
         "skipLibCheck": true,
         "allowJs": true,
         "paths": {
+            "@prisma": ["prisma/index"],
             "@common": ["src/common/index"],
             "@helpers": ["src/common/helpers/index"],
             "@casl": ["src/casl/index"],

@@ -1,20 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './services';
+import { PrismaModule } from '@prisma';
 import { UserController } from './controllers';
-import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema, UserSchemaName } from './schemas';
-import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([{ name: UserSchemaName, schema: UserSchema }]),
-        JwtModule.register({
-            secret: process.env.JWT_KEY,
-            signOptions: { expiresIn: 3600 * 60 * 60 * 24 },
-        }),
-    ],
-    providers: [UserService],
+    imports: [PrismaModule],
     controllers: [UserController],
-    exports: [UserService],
+    providers: [UserService],
 })
-export class UsersModule {}
+export class UserModule {}

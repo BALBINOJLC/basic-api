@@ -18,4 +18,6 @@ if (error) {
     throw new Error(`Config validation error: ${error.message}`);
 }
 
-export const envVars: IEnvVars = eventsShema.validate(process.env, { allowUnknown: true }).value as IEnvVars;
+export const envVars: IEnvVars = eventsShema.validate(process.env, {
+    allowUnknown: true,
+}).value as IEnvVars;

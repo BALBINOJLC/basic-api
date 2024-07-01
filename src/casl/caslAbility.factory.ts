@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-unused-vars */
-/* eslint-disable unused-imports/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Ability, InferSubjects, AbilityBuilder, AbilityClass } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
-import { ActionEnum } from './action.enum';
+import { EAction } from './action.enum';
 
 // type Subjects = InferSubjects<typeof User | typeof Tag | typeof Item> | 'all';
 
-type Subjects = InferSubjects<any> | 'all';
+type TSubjects = InferSubjects<any> | 'all';
 
-export type AppAbility = Ability<[ActionEnum, Subjects]>;
+export type TAppAbility = Ability<[EAction, TSubjects]>;
 
 interface IUserCast {
     [key: string]: any;
@@ -19,24 +17,24 @@ interface IUserCast {
 @Injectable()
 export class CaslAbilityFactory {
     createForUser(user: IUserCast): Ability<any> {
-        const { can, cannot, build, rules } = new AbilityBuilder<Ability<[ActionEnum, Subjects]>>(Ability as AbilityClass<AppAbility>);
+        const { can, cannot, build, rules } = new AbilityBuilder<Ability<[EAction, TSubjects]>>(Ability as AbilityClass<TAppAbility>);
 
         if (user.role === 'ADMIN') {
-            can(ActionEnum.MANAGE, 'all');
+            can(EAction.MANAGE, 'all');
         } else {
-            can(ActionEnum.READ, 'all');
-            // can(ActionEnum.CREATE, Item);
-            //   can(ActionEnum.CREATE, Business);
+            can(EAction.READ, 'all');
+            // can(EAction.CREATE, Item);
+            //   can(EAction.CREATE, Business);
 
-            //   can(ActionEnum.UPDATE, Item, { userId: user.id });
+            //   can(EAction.UPDATE, Item, { userId: user.id });
 
-            //   can(ActionEnum.UPDATE, Business, { userId: user.id });
-            //   can(ActionEnum.DELETE, Business, { userId: user.id });
+            //   can(EAction.UPDATE, Business, { userId: user.id });
+            //   can(EAction.DELETE, Business, { userId: user.id });
 
-            //   can(ActionEnum.UPDATE, User);
+            //   can(EAction.UPDATE, User);
 
-            //   cannot(ActionEnum.READ, User);
-            //   cannot(ActionEnum.READ, Business);
+            //   cannot(EAction.READ, User);
+            //   cannot(EAction.READ, Business);
             //
         }
 

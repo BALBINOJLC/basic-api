@@ -1,1 +1,1 @@
-export * from './users.service';
+export * from './crud.users.service';

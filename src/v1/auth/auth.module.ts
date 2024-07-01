@@ -1,27 +1,24 @@
 import { Module } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './services';
 import { JwtStrategy } from './jwt.strategy';
-import { AuthController, MessagesController } from './controllers';
-import { UsersModule } from '../users';
+import { AuthController } from './controllers';
 import { LocalStrategy } from './local.strategy';
-import { MongooseModule } from '@nestjs/mongoose';
-import { CodesSchema, CodesSchemaName } from './schemas';
 import { EmailsModule } from '@email';
+import { PrismaModule } from '@prisma';
+import { envs } from 'src/config';
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{ name: CodesSchemaName, schema: CodesSchema }]),
-        UsersModule,
-        PassportModule,
+        PrismaModule,
         JwtModule.register({
-            secret: process.env.JWT_KEY,
-            signOptions: { expiresIn: 3600 * 60 * 60 * 24 },
+            global: true,
+            secret: envs.jwt.jxt_key,
+            signOptions: { expiresIn: '2h' },
         }),
         EmailsModule,
     ],
-    controllers: [AuthController, MessagesController],
+    controllers: [AuthController],
     providers: [AuthService, LocalStrategy, JwtStrategy],
     exports: [AuthService],
 })

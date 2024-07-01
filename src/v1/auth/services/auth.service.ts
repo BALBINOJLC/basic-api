@@ -1,496 +1,444 @@
-/* eslint-disable max-lines */
-import { HttpException, HttpStatus, Injectable, Request } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { HttpStatus, Injectable, Logger, Request } from '@nestjs/common';
+import * as argon2 from 'argon2';
+import { LoginUserDto, RegisterMasiveDto, RegisterUserDto } from '../dtos';
 import { JwtService } from '@nestjs/jwt';
-import { IUser, UserCreateDto, UserDocument, UserRolesEnum, UserService, UserTypesEnum } from '@users';
-import { SignUpDto } from '../dtos';
-
-import { Twilio } from 'twilio';
-import { envs } from 'src/config/envs';
-import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
-import { InjectModel } from '@nestjs/mongoose';
-import { CodesDocument, CodesSchemaName } from '../schemas';
-
-import { Model } from 'mongoose';
-import { IActivateAccountSucces, ISingInSucces, ISingUpSucces } from '../interfaces';
-
-import * as admin from 'firebase-admin';
-import * as fs from 'fs';
-import { NetworksEnum } from '../enums';
-import { SocialAuthService } from './social.auth.service';
-import { CommonAuthServise } from './comom.auth.service';
-import { EmailService } from '@email';
-import { RequestWithUser } from '@common';
-import { userjwt, CustomError, generateUniqueRandomNumber } from '@helpers';
+import { IJwtPayload } from '../interfaces';
+import { envs } from 'src/config';
+import { PrismaService } from '@prisma';
+import { ILoginResponse, IRegisterResponse, IResponseVerifyToken } from '../interfaces';
+import { User } from '@prisma/client';
+import { IUser } from '@users';
+import { CustomError, IRequestWithUser, userNameAndCharter } from '@common';
 
 @Injectable()
 export class AuthService {
-    fGoogleAuth = new SocialAuthService(this._userService, this.jwtService);
-
-    fComomnAuth = new CommonAuthServise(this.jwtService);
-
-    private client: Twilio;
-
-    private phone_number = '+***********';
-
+    private readonly logger = new Logger(this.constructor.name);
     constructor(
-        private _userService: UserService,
-        private jwtService: JwtService,
-        @InjectModel(CodesSchemaName)
-        private readonly model: Model<CodesDocument>,
-        private _emailService: EmailService
-    ) {
-        const accountSid = envs.twilio.account_sid;
-        const authToken = envs.twilio.auth_token;
+        private readonly jwtService: JwtService,
+        private prismaS: PrismaService
+    ) {}
 
-        this.client = new Twilio(accountSid, authToken);
-        this.phone_number = envs.twilio.twilio_phone;
-
-        // Inicializar la app de Firebase
-        const serviceAccount = JSON.parse(fs.readFileSync('firebase-admin.json', 'utf8'));
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            databaseURL: 'https://sicrux-teams.firebaseio.com',
-        });
+    async signJWT(payload: IJwtPayload): Promise<string> {
+        return this.jwtService.sign(payload);
     }
 
-    async signUp(input: SignUpDto, invited: boolean, sendEmail: boolean): Promise<ISingUpSucces> {
-        if (input.dni) {
-            input.dni.replace(/[^\w\s]/gi, '');
-        }
-
+    async verifyToken(token: string): Promise<IResponseVerifyToken> {
         try {
-            if (input.socialToken && input.network === NetworksEnum.GOOGLE) {
-                const response = await this.fGoogleAuth.signUpUserGoogle(input);
-                return response;
-            }
-            const newUser: UserCreateDto = {
-                ...input,
-                role: input.role || UserRolesEnum.USER,
-                type: input.type || UserTypesEnum.CLIENT,
+            const { sub, iat, exp, ...user } = this.jwtService.verify(token, {
+                secret: envs.jwt.jxt_key,
+            });
+
+            return {
+                user: user,
+                access_token: await this.signJWT(user),
             };
-            const user = (await this._userService.create(newUser)) as unknown as IUser;
-            const userJwt = userjwt(user);
-            const token = this.fComomnAuth.createJwtPayload(userJwt);
-            try {
-                if (sendEmail) {
-                    await this._emailService.verifyAccount(token.token, user, invited);
-                }
-                return {
-                    user_name: user.user_name,
-                    email: user.email,
-                    _id: user._id,
-                    message: 'AUTH.SIGNUP_SUCCESS',
-                };
-            } catch (error) {
-                throw new CustomError({
-                    message: error.message,
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    module: this.constructor.name,
-                    innerError: error,
-                });
-            }
         } catch (error) {
             throw new CustomError({
-                message: error.message || 'AUTH.ERRORS.SIGNUP',
-                statusCode: HttpStatus.BAD_REQUEST,
+                statusCode: HttpStatus.UNAUTHORIZED,
+                message: 'AUTH.ERRORS.VERIFY_TOKEN',
                 module: this.constructor.name,
-                innerError: error,
             });
         }
     }
 
-    async signIn(@Request() req: RequestWithUser): Promise<ISingInSucces> {
+    async registerUser(registerUserDto: RegisterUserDto): Promise<IRegisterResponse> {
+        const { email, first_name, password, last_name } = registerUserDto;
+
         try {
-            const athorization = await this.getAuthorization(req);
-            const email = athorization[0];
-            const password = athorization[1];
-            // Validate SignIn Social Network
-            const netWork = athorization[2] as NetworksEnum;
-            const socialToken = athorization[3];
-            let datavalidation = null;
-
-            if (netWork && socialToken) {
-                switch (netWork) {
-                    case NetworksEnum.GOOGLE:
-                        datavalidation = await this.fGoogleAuth.validateTokenGoogle(socialToken);
-
-                        if (datavalidation.isValid) {
-                            const user = await this.validateUserSocial(email, datavalidation.isValid);
-                            if (user && typeof user !== 'boolean') {
-                                const userUpdated = await this._userService.update(
-                                    String(user._id),
-                                    {
-                                        last_login: new Date(),
-                                        is_active: datavalidation.isValid,
-                                        email_verify: datavalidation.isValid,
-                                        sign_in_method: netWork,
-                                    },
-                                    String(user._id)
-                                );
-                                const userJwt = userjwt(user);
-                                const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                                return {
-                                    access_token: jwt.token,
-                                    user: userUpdated.data,
-                                    message: 'AUTH.SIGNIN_SUCCESS',
-                                };
-                            } else {
-                                const newUser = await this.signUp(datavalidation.user, false, false);
-                                const userLogged = await this._userService.update(
-                                    String(newUser._id),
-                                    {
-                                        last_login: new Date(),
-                                    },
-                                    String(newUser._id)
-                                );
-                                const userJwt = userjwt(userLogged.data);
-                                const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                                return {
-                                    access_token: jwt.token,
-                                    user: userLogged.data,
-                                    message: 'AUTH.SIGNIN_SUCCESS',
-                                };
-                            }
-                        }
-
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-            const user = await this.validateUser(email, password);
-            await this._userService.update(String(user._id), { last_login: new Date() }, String(user._id));
-            const userJwt = userjwt(user);
-            const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-            return {
-                access_token: jwt.token,
-                user,
-                message: 'AUTH.SIGNIN_SUCCESS',
-            };
-        } catch (err) {
-            throw new CustomError({
-                message: err.message,
-                statusCode: err.statusCode,
-                module: this.constructor.name,
-                innerError: err,
+            const user = await this.prismaS.user.findUnique({
+                where: { email },
             });
-        }
-    }
-
-    async signInTwoAuth(code: string, email: string): Promise<ISingInSucces> {
-        try {
-            const user = await this._userService.validate({ email });
 
             if (user) {
-                const validateCode = await this.model.findOne({ code, email, is_deleted: false });
-
-                if (validateCode) {
-                    await this._userService.update(String(user._id), { last_login: new Date() }, String(user._id));
-                    const userJwt = userjwt(user);
-                    const jwt = this.fComomnAuth.createJwtPayload(userJwt);
-                    await this.model.findByIdAndUpdate(String(validateCode._id), {
-                        is_deleted: true,
-                        deleted_at: new Date(),
-                        code: `${validateCode.code}-is_deleted-${new Date().getTime()}`,
-                    });
-                    return {
-                        access_token: jwt.token,
-                        user,
-                        message: 'AUTH.SIGNIN_SUCCESS',
-                    };
-                } else {
-                    throw new CustomError({
-                        message: 'AUTH.ERRORS.SIGNIN.TWOAUTH_CODE_INVALID',
-                        statusCode: HttpStatus.NOT_FOUND,
-                        module: this.constructor.name,
-                    });
-                }
-            } else {
                 throw new CustomError({
-                    message: 'AUTH.ERRORS.SIGNIN.USER_NOT_FOUND',
-                    statusCode: HttpStatus.NOT_FOUND,
+                    statusCode: HttpStatus.CONFLICT,
+                    message: 'USER.ERRORS.ALREADY_EXISTS',
                     module: this.constructor.name,
                 });
             }
+
+            const hashedPassword = await argon2.hash(password);
+
+            const newUser: any = (await this.prismaS.$transaction(async (prisma) => {
+                const createdUser = await prisma.user.create({
+                    data: {
+                        email: email.toLowerCase().trim(),
+                        password: hashedPassword,
+                        display_name: `${first_name} ${last_name}`,
+                        user_name: userNameAndCharter(email).user_name,
+                        first_name,
+                        last_name,
+                        Profiles: {
+                            create: {
+                                role: 'USER',
+                                active: true,
+                            },
+                        },
+                        Avatar: {
+                            create: userNameAndCharter(email).Avatar,
+                        },
+                    },
+                });
+
+                return createdUser;
+            })) as IUser;
+
+            const { password: _, ...userResponse } = newUser;
+            return { user: userResponse };
         } catch (err) {
             throw new CustomError({
-                message: err.message,
-                statusCode: HttpStatus.BAD_REQUEST,
+                statusCode: err.error?.status ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'USER.ERRORS.REGISTER',
                 module: this.constructor.name,
                 innerError: err,
             });
         }
     }
 
-    async forgotPassword(email: string): Promise<{ message: string }> {
+    async registerUserMasive(registerUserMasiveDto: RegisterMasiveDto[]): Promise<User[]> {
         try {
-            const user = (await this._userService.findOne({ email }, 'email user_name role type')) as unknown as UserDocument;
+            const users: User[] = [];
+            for (const usersMasive of registerUserMasiveDto) {
+                const tempPassword = Math.random().toString(36).slice(-8);
+                const hashedPassword = await argon2.hash(tempPassword);
+                const { email, first_name, last_name, role } = usersMasive;
+
+                const user = await this.prismaS.user.findUnique({
+                    where: { email },
+                });
+                let newUser;
+                if (user) {
+                    newUser = await this.prismaS.user.update({
+                        where: { email },
+                        data: {
+                            display_name: `${first_name} ${last_name}`,
+                            user_name: userNameAndCharter(email).user_name,
+                            first_name,
+                            last_name,
+                            is_active: true,
+                            email_verify: true,
+                            Avatar: {
+                                update: userNameAndCharter(email).Avatar,
+                            },
+                        },
+                    });
+                    await this.prismaS.userProfile.update({
+                        where: {
+                            user_id: newUser.id,
+                        },
+                        data: {
+                            role: role || 'USER',
+                            active: true,
+                        },
+                    });
+                } else {
+                    newUser = await this.prismaS.$transaction(
+                        async (prisma) => {
+                            const createdUser = await prisma.user.create({
+                                data: {
+                                    email: email.toLowerCase().trim(),
+                                    password: hashedPassword,
+                                    display_name: `${first_name} ${last_name}`,
+                                    user_name: userNameAndCharter(email).user_name,
+                                    first_name,
+                                    last_name,
+                                    is_active: true,
+                                    email_verify: true,
+                                    Profiles: {
+                                        create: {
+                                            role: 'ADMIN',
+                                            active: true,
+                                        },
+                                    },
+                                    Avatar: {
+                                        create: userNameAndCharter(email).Avatar,
+                                    },
+                                },
+                            });
+                            return createdUser;
+                        },
+                        {
+                            maxWait: 10000,
+
+                            timeout: 20000,
+                        }
+                    );
+                }
+
+                users.push(newUser);
+            }
+            return users;
+        } catch (err) {
+            throw new CustomError({
+                statusCode: err.error?.status ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'USER.ERRORS.REGISTER',
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
+    }
+
+    async loginUser(@Request() req: IRequestWithUser): Promise<ILoginResponse> {
+        const athorization = await this.getAuthorization(req);
+        const email = athorization[0];
+        const password = athorization[1];
+
+        try {
+            const user: any = await this.prismaS.user.findUnique({
+                where: { email },
+                include: {
+                    Profiles: {
+                        select: {
+                            id: true,
+                            role: true,
+                            active: true,
+                        },
+                    },
+                    Avatar: true,
+                },
+            });
+
+            if (!user) {
+                throw new CustomError({
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.NOT_FOUND',
+                    module: this.constructor.name,
+                });
+            }
+
+            if (!user.email_verify) {
+                throw new CustomError({
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
+                    module: this.constructor.name,
+                });
+            }
+
+            await this.validatePassword(user.password, password);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { password: __, ...rest } = user;
+
+            return {
+                user: rest,
+                access_token: await this.signJWT(rest),
+            };
+        } catch (error) {
+            throw new CustomError({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: error.message,
+                module: this.constructor.name,
+                innerError: error.error,
+            });
+        }
+    }
+
+    async setPasswordAdmin(email: string, password: string): Promise<{ message: string }> {
+        try {
+            const user = await this.prismaS.user.findUnique({
+                where: {
+                    email,
+                },
+            });
             if (user) {
+                const newPassword = await argon2.hash(password.toString());
+                user.password = newPassword;
+                await this.prismaS.user.update({
+                    where: {
+                        email,
+                    },
+                    data: {
+                        password: newPassword,
+                    },
+                });
                 try {
-                    const token = this.jwtService.sign({ email: user.email });
-                    await this._emailService.forgotPassword(token, user);
                     const resp = {
                         message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
+                        data: user,
                     };
                     return resp;
                 } catch (err) {
                     throw new CustomError({
-                        message: err.message,
                         statusCode: HttpStatus.BAD_REQUEST,
+                        message: 'AUTH.ERRORS.FORGOT_PASSWORD',
                         module: this.constructor.name,
                         innerError: err,
                     });
                 }
             } else {
                 throw new CustomError({
-                    message: 'AUTH.ERRORS.FORGOT_PASSWORD.USER_NOT_FOUND',
-                    statusCode: HttpStatus.NOT_FOUND,
+                    statusCode: HttpStatus.BAD_REQUEST,
+                    message: 'USER.ERRORS.NOT_FOUND',
                     module: this.constructor.name,
                 });
             }
-        } catch (err) {
+        } catch (error) {
             throw new CustomError({
-                message: err.message,
                 statusCode: HttpStatus.BAD_REQUEST,
+                message: error.message,
                 module: this.constructor.name,
-                innerError: err,
+                innerError: error.error,
             });
         }
     }
 
-    async checkToken(@Request() req: RequestWithUser): Promise<Record<string, unknown>> {
-        return req.headers;
-    }
-
     async validateUser(email: string, password: string): Promise<IUser> {
         try {
-            const user = (await this._userService.validate({ email })) as unknown as IUser;
-
+            const user: any = await this.prismaS.user.findUnique({
+                where: { email },
+            });
             if (!user) {
                 throw new CustomError({
-                    message: 'USER.ERRORS.NOT_FOUND',
                     statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.NOT_FOUND',
                     module: this.constructor.name,
                 });
             } else if (!user.email_verify) {
                 throw new CustomError({
-                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
                     statusCode: HttpStatus.FORBIDDEN,
+                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
                     module: this.constructor.name,
                 });
             } else if (!user.is_active) {
                 throw new CustomError({
-                    message: 'AUTH.ERRORS.SIGNIN.ACCOUNT_NOT_ACTIVATED',
                     statusCode: HttpStatus.FORBIDDEN,
+                    message: 'AUTH.ERRORS.SIGNIN.ACCOUNT_NOT_ACTIVATED',
                     module: this.constructor.name,
                 });
             }
-
             await this.validatePassword(password, user.password);
 
             return user;
         } catch (error) {
             throw new CustomError({
-                message: error.message,
-                statusCode: error.statusCode,
+                statusCode: error?.error.statusCode ?? HttpStatus.BAD_REQUEST,
+                message: error.message ?? 'AUTH.ERRORS.VALIDATING_USER',
                 module: this.constructor.name,
-                innerError: error,
+                innerError: error.error,
             });
         }
     }
 
-    async getAuthorization(@Request() req: RequestWithUser): Promise<string[]> {
-        const base64 = (req.headers.authorization || '').split(' ')[1] || '';
-        const buff = Buffer.from(base64, 'base64');
-        const string = buff.toString('ascii').split(':');
-        return string;
-    }
-
-    async activateAccount(token: string): Promise<IActivateAccountSucces> {
-        return new Promise<IActivateAccountSucces>(async (resolve, reject) => {
-            try {
-                const payload = this.jwtService.verify(token);
-                const user = await this._userService.findOne({ email: payload.email });
-                if (user) {
-                    await this._userService.update(String(user._id), { email_verify: true, is_active: true }, String(user._id));
-                    const resp = {
-                        message: 'AUTH.ACCOUNT_ACTIVATED',
-                        email: user.email,
-                    };
-                    resolve(resp);
-                } else {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.ACTIVATE_ACCOUNT.USER_NOT_FOUND', HttpStatus.NOT_FOUND),
-                        err: null,
-                    };
-                    reject(error);
-                }
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
     async resetPassword(token: string, password: string): Promise<{ message: string }> {
         try {
-            const payload = this.jwtService.verify(token);
-            const user = await this._userService.findOne({ email: payload.email });
+            const { email } = this.jwtService.verify(token);
+            const user: any = await this.prismaS.user.findUnique({
+                where: { email },
+            });
             if (user) {
                 await this.validateSamePassword(password, user.password);
-                await this._userService.update(String(user._id), { password }, String(user._id));
+                const newPassword = await argon2.hash(password);
+                user.password = newPassword;
+                await user.save();
                 const resp = {
                     message: 'AUTH.PASSWORD_RESET_SUCCESS',
                 };
                 return resp;
             } else {
                 throw new CustomError({
-                    message: 'AUTH.ERRORS.RESET_PASSWORD.USER_NOT_FOUND',
                     statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.NOT_FOUND',
                     module: this.constructor.name,
                 });
             }
         } catch (err) {
             throw new CustomError({
-                message: err.message,
-                statusCode: err.statusCode,
+                statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'AUTH.ERRORS.RESET_PASSWORD',
                 module: this.constructor.name,
                 innerError: err,
             });
         }
     }
 
-    async changePassword(@Request() req: RequestWithUser, currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    async setNewPasswordAdmin(email: string, password: string): Promise<{ message: string }> {
         try {
-            const email = req.user.email;
-            const validateUser = await this.validateUser(email, currentPassword);
-            await this.validateSamePassword(newPassword, validateUser.password);
-            return { message: 'ok' };
-        } catch (error) {
+            const user: any = await this.prismaS.user.findUnique({
+                where: { email },
+            });
+            if (user) {
+                const newPassword = await argon2.hash(password.toString());
+                user.password = newPassword;
+                await user.save();
+                try {
+                    const resp = {
+                        message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
+                        data: user,
+                    };
+                    return resp;
+                } catch (err) {
+                    throw new CustomError({
+                        statusCode: HttpStatus.BAD_REQUEST,
+                        message: 'AUTH.ERRORS.FORGOT_PASSWORD',
+                        module: this.constructor.name,
+                        innerError: err,
+                    });
+                }
+            } else {
+                throw new CustomError({
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.NOT_FOUND',
+                    module: this.constructor.name,
+                });
+            }
+        } catch (err) {
             throw new CustomError({
-                message: error.message,
-                statusCode: error.statusCode,
+                statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'AUTH.ERRORS.SET_NEW_PASSWORD',
                 module: this.constructor.name,
-                innerError: error,
+                innerError: err,
             });
         }
     }
 
-    async setNewPasswordAdmin(email: string, passwrod: string): Promise<{ message: string }> {
-        return new Promise<{ message: string }>(async (resolve, reject) => {
-            try {
-                const user = await this._userService.findOne({ email }, 'email user_name role type');
-                if (user) {
-                    const newPassword = await bcrypt.hash(passwrod.toString(), 10);
-                    await this._userService.update(String(user._id), { password: newPassword }, String(user._id));
-                    try {
-                        const resp = {
-                            message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
-                            data: user,
-                        };
-                        resolve(resp);
-                    } catch (err) {
-                        reject(err);
-                    }
-                } else {
-                    const error = {
-                        code: new HttpException('AUTH.ERRORS.FORGOT_PASSWORD.USER_NOT_FOUND', HttpStatus.NOT_FOUND),
-                        err: null,
-                    };
-                    reject(error);
-                }
-            } catch (err) {
-                reject(err);
-            }
-        });
+    async changePassword(@Request() req: IRequestWithUser, currentPassword: string, newPassword: string): Promise<{ message: string }> {
+        try {
+            const email = req.user.email;
+
+            const validateUser = await this.validateUser(email, currentPassword);
+            await this.validateSamePassword(newPassword, validateUser.password);
+            return { message: 'ok' };
+        } catch (err) {
+            throw new CustomError({
+                statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'AUTH.ERRORS.CHANGE_PASSWORD',
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
     }
 
-    async sendCode(phone: string, message: string): Promise<MessageInstance> {
-        return new Promise<MessageInstance>(async (resolve, reject) => {
-            try {
-                const resp = await this.client.messages.create({
-                    body: message,
-                    from: this.phone_number,
-                    to: phone,
+    private async validateSamePassword(password: string, hashPassword: string): Promise<boolean> {
+        return new Promise<boolean>(async (resolve, reject) => {
+            const passwordValidation = await argon2.verify(hashPassword, password);
+            if (passwordValidation) {
+                throw new CustomError({
+                    statusCode: HttpStatus.CONFLICT,
+                    message: 'AUTH.ERRORS.SIGNIN.PASSWORD_SAME_OLD',
+                    module: this.constructor.name,
                 });
-
-                resolve(resp);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    async generateCode(email: string): Promise<CodesDocument> {
-        return new Promise<CodesDocument>(async (resolve, reject) => {
-            try {
-                const code = generateUniqueRandomNumber().toString();
-                const payload = {
-                    email,
-                    code,
-                };
-                const newCode = new this.model(payload);
-                const codeDb = await newCode.save();
-                resolve(codeDb);
-            } catch (err) {
-                reject(err);
+            } else {
+                resolve(passwordValidation);
             }
         });
     }
 
     private async validatePassword(password: string, hashPassword: string): Promise<boolean> {
-        const passwordValidation = (await bcrypt.compare(password, hashPassword)) as boolean;
+        const isPasswordValid = await argon2.verify(hashPassword, password);
 
-        if (!passwordValidation) {
+        if (!isPasswordValid) {
             throw new CustomError({
-                message: 'AUTH.ERRORS.SIGNIN.INCORRECT_PASSWORD',
-                statusCode: HttpStatus.FORBIDDEN,
-                module: this.constructor.name,
-            });
-        }
-
-        return passwordValidation;
-    }
-
-    private async validateSamePassword(password: string, hashPassword: string): Promise<boolean> {
-        const passwordValidation = (await bcrypt.compare(password, hashPassword)) as boolean;
-
-        if (passwordValidation) {
-            throw new CustomError({
-                message: 'AUTH.ERRORS.PASSWORD_SAME_OLD',
-                statusCode: HttpStatus.CONFLICT,
-                module: this.constructor.name,
-            });
-        } else {
-            return passwordValidation;
-        }
-    }
-
-    private async validateUserSocial(email: string, isVerified: boolean) {
-        try {
-            const user = await this._userService.validate({ email });
-
-            if (!user) {
-                return false;
-            }
-
-            if (isVerified) {
-                return user;
-            } else {
-                throw new CustomError({
-                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
-                    statusCode: HttpStatus.BAD_REQUEST,
-                    module: this.constructor.name,
-                });
-            }
-        } catch (err) {
-            throw new CustomError({
-                message: err.message,
                 statusCode: HttpStatus.BAD_REQUEST,
+                message: 'AUTH.ERRORS.SIGNIN.INVALID_PASSWORD',
                 module: this.constructor.name,
-                innerError: err,
             });
         }
+        return isPasswordValid;
+    }
+    private async getAuthorization(@Request() req: IRequestWithUser): Promise<string[]> {
+        const base64 = (req.headers.authorization || '').split(' ')[1] || '';
+        const buff = Buffer.from(base64, 'base64');
+        const string = buff.toString('ascii').split(':');
+        return string;
     }
 }
