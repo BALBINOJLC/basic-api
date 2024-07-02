@@ -9,7 +9,7 @@ import { PrismaService } from '@prisma';
 import { ILoginResponse, IRegisterResponse, IResponseVerifyToken } from '../interfaces';
 import { User } from '@prisma/client';
 import { IUser } from '@users';
-import { CustomError, IRequestWithUser, userNameAndCharter } from '@common';
+import { CustomError, IRequestWithUser, excludePassword, userNameAndCharter } from '@common';
 
 @Injectable()
 export class AuthService {
@@ -217,7 +217,7 @@ export class AuthService {
 
             await this.validatePassword(user.password, password);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { password: __, ...rest } = user;
+            const rest = excludePassword(user);
 
             return {
                 user: rest,
@@ -423,7 +423,7 @@ export class AuthService {
         });
     }
 
-    private async validatePassword(password: string, hashPassword: string): Promise<boolean> {
+    private async validatePassword(hashPassword: string, password: string): Promise<boolean> {
         const isPasswordValid = await argon2.verify(hashPassword, password);
 
         if (!isPasswordValid) {

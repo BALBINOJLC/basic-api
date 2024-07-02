@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { CustomError, ParamsDto } from '@common';
+import { CustomError, ParamsDto, excludePassword } from '@common';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma';
 import { UserFilterDto, UserUpdateDto } from '../dtos';
@@ -22,7 +22,7 @@ export class UserService {
             const realLimit = limit === 0 ? length : limit;
 
             return {
-                data: data.map(this.excludePassword),
+                data: data.map(excludePassword),
                 page: perPage,
                 per_page: realLimit,
                 total_count: length,
@@ -101,7 +101,7 @@ export class UserService {
             });
 
             return {
-                data: users.map(this.excludePassword),
+                data: users.map(excludePassword),
                 page: offset,
                 per_page: limit,
                 total_count: totalUsersCount,
@@ -144,7 +144,7 @@ export class UserService {
                 });
             }
 
-            return this.excludePassword(user);
+            return excludePassword(user);
         } catch (err) {
             throw new CustomError({
                 statusCode: err.error?.status ?? HttpStatus.BAD_REQUEST,
@@ -211,7 +211,7 @@ export class UserService {
                 data: dataUpdate,
             });
 
-            return this.excludePassword(user);
+            return excludePassword(user);
         } catch (err) {
             throw new CustomError({
                 statusCode: err.error.status ?? HttpStatus.BAD_REQUEST,
@@ -234,7 +234,7 @@ export class UserService {
                 },
             });
 
-            return this.excludePassword(user);
+            return excludePassword(user);
         } catch (err) {
             throw new CustomError({
                 message: 'TASK.ERRORS.UPDATE',
@@ -270,10 +270,5 @@ export class UserService {
                   skip: offset,
                   take: limit,
               }) as unknown as Promise<IUser[]>);
-    }
-
-    private excludePassword(user: any): any {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
     }
 }

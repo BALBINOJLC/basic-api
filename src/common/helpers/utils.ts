@@ -22,3 +22,9 @@ export const userNameAndCharter = (email: string): IDataBaseUser => {
 
     return { Avatar, user_name };
 };
+
+export const excludePassword = (user: any): any => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+};
