@@ -13,3 +13,7 @@ export interface IResponseVerifyToken {
     access_token: string;
     user: IUser;
 }
+
+export interface IResponseMessage {
+    message: string;
+}

@@ -3,7 +3,7 @@ import { HttpStatus, Injectable, Logger, Request } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { LoginUserDto, RegisterMasiveDto, RegisterUserDto } from '../dtos';
 import { JwtService } from '@nestjs/jwt';
-import { IJwtPayload } from '../interfaces';
+import { IJwtPayload, IResponseMessage } from '../interfaces';
 import { envs } from 'src/config';
 import { PrismaService } from '@prisma';
 import { ILoginResponse, IRegisterResponse, IResponseVerifyToken } from '../interfaces';
@@ -86,7 +86,6 @@ export class AuthService {
                 return createdUser;
             })) as IUser;
 
-            // Enviar correo de verificación
             const token = await this.signJWT(newUser);
             await this._emailService.sendVerificationEmail(token, newUser);
 
@@ -331,22 +330,27 @@ export class AuthService {
             const user: any = await this.prismaS.user.findUnique({
                 where: { email },
             });
-            if (user) {
-                await this.validateSamePassword(password, user.password);
-                const newPassword = await argon2.hash(password);
-                user.password = newPassword;
-                await user.save();
-                const resp = {
-                    message: 'AUTH.PASSWORD_RESET_SUCCESS',
-                };
-                return resp;
-            } else {
+            if (!user) {
                 throw new CustomError({
                     statusCode: HttpStatus.NOT_FOUND,
                     message: 'USER.ERRORS.NOT_FOUND',
                     module: this.constructor.name,
                 });
             }
+
+            await this.validateSamePassword(password, user.password);
+            const newPassword = await argon2.hash(password);
+            user.password = newPassword;
+            await this.prismaS.user.update({
+                where: { email },
+                data: {
+                    password: newPassword,
+                },
+            });
+            const resp = {
+                message: 'AUTH.PASSWORD_RESET_SUCCESS',
+            };
+            return resp;
         } catch (err) {
             throw new CustomError({
                 statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
@@ -408,6 +412,36 @@ export class AuthService {
             throw new CustomError({
                 statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
                 message: err.message ?? 'AUTH.ERRORS.CHANGE_PASSWORD',
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
+    }
+
+    async forgotPassword(email: string): Promise<IResponseMessage> {
+        try {
+            const user = (await this.prismaS.user.findUnique({
+                where: { email },
+            })) as IUser;
+            if (!user) {
+                throw new CustomError({
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.NOT_FOUND',
+                    module: this.constructor.name,
+                });
+            }
+
+            const token = await this.signJWT(user);
+            await this._emailService.forgotPassword(token, user);
+
+            const resp = {
+                message: 'AUTH.FORGOT_PASSWORD_SUCCESS',
+            };
+            return resp;
+        } catch (err) {
+            throw new CustomError({
+                statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'AUTH.ERRORS.FORGOT_PASSWORD',
                 module: this.constructor.name,
                 innerError: err,
             });

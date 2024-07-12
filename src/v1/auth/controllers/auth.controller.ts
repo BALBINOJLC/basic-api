@@ -1,10 +1,10 @@
 import { Body, Post, UseGuards, Request, Res, Query, Controller, Req, HttpStatus, Get } from '@nestjs/common';
 import { AuthService } from '../services';
-import { ApiBasicAuth, ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBasicAuth, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
 import { Response } from 'express';
 import { JwtAuthGuard, IRequestWithUser, RequestHandlerUtil, CustomError } from '@common';
-import { RegisterUserDto } from '../dtos';
+import { PasswordForgotDto, RegisterUserDto, ResetPasswordDto } from '../dtos';
 
 @ApiTags('AUTH')
 @Controller({
@@ -38,14 +38,14 @@ export class AuthController {
 
     @Post('reset-password')
     async passwordresetToken(
-        @Body() body: { password: { password: string } },
+        @Body() body: ResetPasswordDto,
         @Query('token') token: string,
 
         @Res() res: Response
     ): Promise<Response | void> {
         const { password } = body;
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.resetPassword(token, password.password),
+            action: () => this._authService.resetPassword(token, password),
             res,
             module: this.constructor.name,
         });
@@ -54,10 +54,6 @@ export class AuthController {
     @Post('change-password')
     @ApiBasicAuth()
     @UseGuards(JwtAuthGuard)
-    @ApiOperation({
-        summary: 'Change Password',
-        description: 'Change Password',
-    })
     async changePassword(
         @Request() req: IRequestWithUser,
         @Res() res: Response,
@@ -98,6 +94,17 @@ export class AuthController {
                 return res.status(500).json(error);
             }
         }
+    }
+
+    @Post('link/password')
+    async passwordReset(@Body() body: PasswordForgotDto, @Res() res: Response): Promise<Response | void> {
+        const { email } = body;
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.forgotPassword(email),
+            res,
+            module: this.constructor.name,
+            actionDescription: 'Send Password Reset Link',
+        });
     }
 
     @Get('activateaccount/:token')
