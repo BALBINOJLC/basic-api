@@ -12,6 +12,7 @@ interface IHandleRequestParams {
     actionDescription?: string;
     userName?: string;
     responseModifier?: (res: Response, result: any) => void;
+    redirectUrl?: string;
 }
 
 @Injectable()
@@ -24,12 +25,17 @@ export class RequestHandlerUtil {
         userName = 'Unknown',
         module = 'RequestHandlerUtil',
         responseModifier,
-    }: IHandleRequestParams): Promise<Response<any>> {
+        redirectUrl,
+    }: IHandleRequestParams): Promise<Response<any> | void> {
         this.logActionStart(actionDescription, userName, module);
 
         try {
             const result = await action();
             this.logActionSuccess(actionDescription, userName, module);
+
+            if (redirectUrl) {
+                return res.redirect(redirectUrl);
+            }
 
             return responseModifier ? this.modifyResponse(res, result, responseModifier) : res.json(result);
         } catch (error) {

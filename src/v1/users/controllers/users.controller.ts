@@ -25,7 +25,7 @@ export class UserController {
         @Query() query: UserFilterDto,
         @Res() res: Response,
         @Req() req: IRequestWithUser
-    ): Promise<Response> {
+    ): Promise<Response | void> {
         const { user } = req;
 
         return RequestHandlerUtil.handleRequest({
@@ -50,7 +50,7 @@ export class UserController {
         @Query() query: UserFilterDto,
         @Req() req: IRequestWithUser,
         @Res() res: Response
-    ): Promise<Response> {
+    ): Promise<Response | void> {
         const { user } = req;
         const regExp = new RegExp(regexp, 'i');
         return RequestHandlerUtil.handleRequest({
@@ -75,7 +75,7 @@ export class UserController {
     })
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
-    async findOne(@Query() query: UserFilterDto, @Res() res: Response): Promise<Response> {
+    async findOne(@Query() query: UserFilterDto, @Res() res: Response): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
             action: () => this._userService.findOne(query),
             res: res,
@@ -95,7 +95,7 @@ export class UserController {
         @Param('id') id: string,
         @Res() res: Response,
         @Req() req: IRequestWithUser
-    ): Promise<Response> {
+    ): Promise<Response | void> {
         const { user } = req;
         return RequestHandlerUtil.handleRequest({
             action: () => this._userService.update(body, id),
@@ -112,7 +112,7 @@ export class UserController {
         summary: 'Delete User',
         description: 'Delete a User',
     })
-    async delete(@Param('id') id: string, @Res() res: Response): Promise<Response> {
+    async delete(@Param('id') id: string, @Res() res: Response): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
             action: () => this._userService.delete(id),
             res: res,

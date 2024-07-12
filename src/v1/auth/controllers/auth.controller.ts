@@ -1,4 +1,4 @@
-import { Body, Post, UseGuards, Request, Res, Query, Controller, Req, HttpStatus } from '@nestjs/common';
+import { Body, Post, UseGuards, Request, Res, Query, Controller, Req, HttpStatus, Get } from '@nestjs/common';
 import { AuthService } from '../services';
 import { ApiBasicAuth, ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
@@ -19,7 +19,7 @@ export class AuthController {
     }
 
     @Post('signup')
-    async signup(@Body() body: RegisterUserDto, @Res() res: Response): Promise<Response> {
+    async signup(@Body() body: RegisterUserDto, @Res() res: Response): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
             action: () => this._authService.registerUser(body),
             res,
@@ -28,7 +28,7 @@ export class AuthController {
     }
 
     @Post('signin')
-    async signin(@Request() req: IRequestWithUser, @Res() res: Response): Promise<Response> {
+    async signin(@Request() req: IRequestWithUser, @Res() res: Response): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
             action: () => this._authService.loginUser(req),
             res,
@@ -42,7 +42,7 @@ export class AuthController {
         @Query('token') token: string,
 
         @Res() res: Response
-    ): Promise<Response> {
+    ): Promise<Response | void> {
         const { password } = body;
         return RequestHandlerUtil.handleRequest({
             action: () => this._authService.resetPassword(token, password.password),
@@ -62,7 +62,7 @@ export class AuthController {
         @Request() req: IRequestWithUser,
         @Res() res: Response,
         @Body() body: { currentPassword: string; newPassword: string }
-    ): Promise<Response> {
+    ): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
             action: () => this._authService.changePassword(req, body.currentPassword, body.newPassword),
             res,
@@ -78,7 +78,7 @@ export class AuthController {
         @Body() body: { email: string; password: string },
         @Res() res: Response,
         @Req() req: IRequestWithUser
-    ): Promise<Response> {
+    ): Promise<Response | void> {
         const { email, password } = body;
         try {
             const { user } = req;
@@ -98,5 +98,17 @@ export class AuthController {
                 return res.status(500).json(error);
             }
         }
+    }
+
+    @Get('activateaccount/:token')
+    async activateAccount(@Req() req: IRequestWithUser, @Res() res: Response): Promise<any> {
+        const { token } = req.params;
+        return RequestHandlerUtil.handleRequest({
+            action: () => this._authService.activateAccount(token),
+            res,
+            module: this.constructor.name,
+            actionDescription: 'Activate Account',
+            redirectUrl: `${this.CLIENT_URI}/auth/sign-in`,
+        });
     }
 }

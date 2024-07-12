@@ -58,13 +58,8 @@ export class EmailService {
         }
     }
 
-    async verifyAccount(token: string, user: IUser, invited: boolean): Promise<IResponseEmail> {
-        let link = '';
-        if (!invited) {
-            link = `${this.URI_BACK}/auth/activateaccount/${token}`;
-        } else {
-            link = `${this.URI_BACK}/auth/activateaccountinvited/${token}`;
-        }
+    async sendVerificationEmail(token: string, user: IUser): Promise<IResponseEmail> {
+        const link = `${this.URI_BACK}/auth/activateaccount/${token}`;
 
         const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 

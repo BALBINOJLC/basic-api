@@ -10,6 +10,12 @@ const eventsShema = Joi.object({
     CLIENT_URI: Joi.string().required(),
     JWT_KEY: Joi.string().required(),
     DATABASE_URL: Joi.string().required(),
+    TWILIO_ACCOUNT_SID: Joi.string(),
+    TWILIO_AUTH_TOKEN: Joi.string(),
+    TWILIO_PHONE: Joi.string(),
+    BV_API_KEY: Joi.string().required(),
+    BV_VERIFY_ACCOUNT: Joi.string().required(),
+    BV_RESET_PASSWORD: Joi.string().required(),
 });
 
 const { error } = eventsShema.validate(process.env, { allowUnknown: true });

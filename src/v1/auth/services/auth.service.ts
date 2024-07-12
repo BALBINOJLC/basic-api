@@ -10,13 +10,15 @@ import { ILoginResponse, IRegisterResponse, IResponseVerifyToken } from '../inte
 import { User } from '@prisma/client';
 import { IUser } from '@users';
 import { CustomError, IRequestWithUser, excludePassword, userNameAndCharter } from '@common';
+import { EmailService } from '@email';
 
 @Injectable()
 export class AuthService {
     private readonly logger = new Logger(this.constructor.name);
     constructor(
         private readonly jwtService: JwtService,
-        private prismaS: PrismaService
+        private prismaS: PrismaService,
+        private _emailService: EmailService
     ) {}
 
     async signJWT(payload: IJwtPayload): Promise<string> {
@@ -53,7 +55,7 @@ export class AuthService {
             if (user) {
                 throw new CustomError({
                     statusCode: HttpStatus.CONFLICT,
-                    message: 'USER.ERRORS.ALREADY_EXISTS',
+                    message: 'AUTH.ERRORS.ALREADY_EXISTS',
                     module: this.constructor.name,
                 });
             }
@@ -83,6 +85,10 @@ export class AuthService {
 
                 return createdUser;
             })) as IUser;
+
+            // Enviar correo de verificación
+            const token = await this.signJWT(newUser);
+            await this._emailService.sendVerificationEmail(token, newUser);
 
             const { password: _, ...userResponse } = newUser;
             return { user: userResponse };
@@ -402,6 +408,47 @@ export class AuthService {
             throw new CustomError({
                 statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
                 message: err.message ?? 'AUTH.ERRORS.CHANGE_PASSWORD',
+                module: this.constructor.name,
+                innerError: err,
+            });
+        }
+    }
+
+    async activateAccount(token: string) {
+        try {
+            const { email } = this.jwtService.verify(token);
+            const user = (await this.prismaS.user.findUnique({
+                where: { email },
+            })) as IUser;
+            if (user) {
+                await this.prismaS.user.update({
+                    where: { email },
+                    data: {
+                        email_verify: true,
+                        is_active: true,
+                    },
+                });
+                // refresh token
+                const token = await this.signJWT(user);
+
+                const resp = {
+                    message: 'AUTH.ACCOUNT_ACTIVATED',
+                    email: user.email,
+                    token: token,
+                };
+
+                return resp;
+            } else {
+                throw new CustomError({
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.NOT_FOUND',
+                    module: this.constructor.name,
+                });
+            }
+        } catch (err) {
+            throw new CustomError({
+                statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
+                message: err.message ?? 'AUTH.ERRORS.ACTIVATE_ACCOUNT',
                 module: this.constructor.name,
                 innerError: err,
             });
