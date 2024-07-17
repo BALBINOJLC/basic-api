@@ -5,10 +5,14 @@ import { PrismaService } from '@prisma';
 import { UserFilterDto, UserUpdateDto } from '../dtos';
 import { IRespFindAllUsers, IUser, IUserUpdated } from '../interfaces';
 import { queryFetchUsers } from '../queries/users.queriers';
+import { AuthService } from '@auth';
 
 @Injectable()
 export class UserService {
-    constructor(private prismaService: PrismaService) {}
+    constructor(
+        private prismaService: PrismaService,
+        private authService: AuthService
+    ) {}
 
     async findAll(filter: UserFilterDto, params: ParamsDto): Promise<IRespFindAllUsers> {
         try {
@@ -191,8 +195,9 @@ export class UserService {
         }
     }
 
-    async update(data: UserUpdateDto, id: string): Promise<IUserUpdated> {
+    async update(data: UserUpdateDto, id: string, profile: string): Promise<IUserUpdated> {
         try {
+            let token = null;
             const dataUpdate = await this.prepareInput(data);
             const user = await this.prismaService.user.update({
                 where: {
@@ -211,11 +216,19 @@ export class UserService {
                 data: dataUpdate,
             });
 
-            return excludePassword(user);
+            if (profile) {
+                token = await this.authService.signJWT(user);
+            }
+
+            return {
+                data: excludePassword(user),
+                message: 'USER.SUCCESS.UPDATED',
+                access_token: token,
+            };
         } catch (err) {
             throw new CustomError({
-                statusCode: err.error.status ?? HttpStatus.BAD_REQUEST,
-                message: err.error.message ?? 'USER.ERRORS.UPDATE',
+                statusCode: err.error?.status ?? HttpStatus.BAD_REQUEST,
+                message: err.error?.message ?? 'USER.ERRORS.UPDATE',
                 module: this.constructor.name,
                 innerError: err as Error,
             });

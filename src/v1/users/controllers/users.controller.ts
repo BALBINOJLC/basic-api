@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { UserFilterDto, UserUpdateDto } from '../dtos';
 import { Response } from 'express';
@@ -83,7 +83,7 @@ export class UserController {
         });
     }
 
-    @Put(':id')
+    @Patch(':id/:profile?')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @ApiOperation({
@@ -93,12 +93,13 @@ export class UserController {
     async update(
         @Body() body: UserUpdateDto,
         @Param('id') id: string,
+        @Param('profile') profile: string,
         @Res() res: Response,
         @Req() req: IRequestWithUser
     ): Promise<Response | void> {
         const { user } = req;
         return RequestHandlerUtil.handleRequest({
-            action: () => this._userService.update(body, id),
+            action: () => this._userService.update(body, id, profile),
             res: res,
             module: this.constructor.name,
             userName: user.user_name,

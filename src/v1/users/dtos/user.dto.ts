@@ -1,5 +1,6 @@
 import { RegisterUserDto } from '@auth';
 import { ParamsDto } from '@common';
+import { PartialType } from '@nestjs/swagger';
 import { EUserRole } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsString, IsNotEmpty, IsOptional, ValidateNested } from 'class-validator';
@@ -22,7 +23,7 @@ export class CreateProfileDto {
     profileData: ProfileDto;
 }
 
-export class UserUpdateDto extends RegisterUserDto {
+export class UserUpdateDto extends PartialType(RegisterUserDto) {
     @IsString()
     @IsOptional()
     display_name?: string;
@@ -30,6 +31,18 @@ export class UserUpdateDto extends RegisterUserDto {
     @IsString()
     @IsOptional()
     dni?: string;
+
+    @IsString()
+    @IsOptional()
+    phone_area?: string;
+
+    @IsString()
+    @IsOptional()
+    phone?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    two_auth?: boolean;
 }
 
 export class RemoveProfileDto {
