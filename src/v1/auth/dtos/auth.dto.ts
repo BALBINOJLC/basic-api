@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsStrongPassword } from 'class-validator';
+import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsStrongPassword } from 'class-validator';
 
 export class LoginUserDto {
     @IsString()
@@ -40,6 +40,14 @@ export class RegisterUserDto {
     @IsString()
     @IsStrongPassword()
     password: string;
+
+    @IsOptional()
+    @IsBoolean()
+    is_active?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    email_verify?: boolean;
 }
 
 export class RegisterMasiveDto {
