@@ -220,7 +220,10 @@ export class AuthService {
                 });
             }
 
-            await this.validatePassword(user.password, password);
+            await this.validatePassword({
+                hashPassword: user.password,
+                password,
+            });
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const rest = excludePassword(user);
 
@@ -311,15 +314,18 @@ export class AuthService {
                     module: this.constructor.name,
                 });
             }
-            await this.validatePassword(password, user.password);
+            await this.validatePassword({
+                hashPassword: user.password,
+                password,
+            });
 
             return user;
         } catch (error) {
             throw new CustomError({
-                statusCode: error?.error.statusCode ?? HttpStatus.BAD_REQUEST,
+                statusCode: error?.error?.statusCode ?? HttpStatus.BAD_REQUEST,
                 message: error.message ?? 'AUTH.ERRORS.VALIDATING_USER',
                 module: this.constructor.name,
-                innerError: error.error,
+                innerError: error?.error ?? error,
             });
         }
     }
@@ -338,7 +344,10 @@ export class AuthService {
                 });
             }
 
-            await this.validateSamePassword(password, user.password);
+            await this.validateSamePassword({
+                password,
+                hashPassword: user.password,
+            });
             const newPassword = await argon2.hash(password);
             user.password = newPassword;
             await this.prismaS.user.update({
@@ -406,8 +415,20 @@ export class AuthService {
             const email = req.user.email;
 
             const validateUser = await this.validateUser(email, currentPassword);
-            await this.validateSamePassword(newPassword, validateUser.password);
-            return { message: 'ok' };
+            await this.validateSamePassword({
+                password: newPassword,
+                hashPassword: validateUser.password,
+            });
+            // Update password
+            const newPasswordHash = await argon2.hash(newPassword);
+            await this.prismaS.user.update({
+                where: { email },
+                data: {
+                    password: newPasswordHash,
+                },
+            });
+
+            return { message: 'AUTH.PASSWORD_CHANGED' };
         } catch (err) {
             throw new CustomError({
                 statusCode: err.error?.statusCode ?? HttpStatus.BAD_REQUEST,
@@ -489,28 +510,26 @@ export class AuthService {
         }
     }
 
-    private async validateSamePassword(password: string, hashPassword: string): Promise<boolean> {
-        return new Promise<boolean>(async (resolve, reject) => {
-            const passwordValidation = await argon2.verify(hashPassword, password);
-            if (passwordValidation) {
-                throw new CustomError({
-                    statusCode: HttpStatus.CONFLICT,
-                    message: 'AUTH.ERRORS.SIGNIN.PASSWORD_SAME_OLD',
-                    module: this.constructor.name,
-                });
-            } else {
-                resolve(passwordValidation);
-            }
-        });
+    private async validateSamePassword({ password, hashPassword }: { password: string; hashPassword: string }): Promise<boolean> {
+        const passwordValidation = await argon2.verify(hashPassword, password);
+        if (passwordValidation) {
+            throw new CustomError({
+                statusCode: HttpStatus.CONFLICT,
+                message: 'AUTH.ERRORS.SIGNIN.PASSWORD_SAME_OLD',
+                module: this.constructor.name,
+            });
+        } else {
+            return passwordValidation;
+        }
     }
 
-    private async validatePassword(hashPassword: string, password: string): Promise<boolean> {
+    private async validatePassword({ password, hashPassword }: { password: string; hashPassword: string }): Promise<boolean> {
         const isPasswordValid = await argon2.verify(hashPassword, password);
 
         if (!isPasswordValid) {
             throw new CustomError({
                 statusCode: HttpStatus.BAD_REQUEST,
-                message: 'AUTH.ERRORS.SIGNIN.INVALID_PASSWORD',
+                message: 'AUTH.ERRORS.SIGNIN.INVALID_PASSWORD_OR_EMAIL',
                 module: this.constructor.name,
             });
         }
