@@ -24,7 +24,8 @@
         "prepare": "husky install",
         "release": "standard-version",
         "deploy:staging": "yarn test && git checkout staging && git merge develop && yarn build && yarn release && git push --follow-tags origin staging && bash ./scripts/deploy.bash -d staging && git checkout develop && git merge staging && git push",
-        "deploy:main": "yarn test && git checkout main && git merge develop && yarn build && yarn release && git push --follow-tags origin main && bash ./scripts/deploy.bash -d production && git checkout develop && git merge main && git push"
+        "deploy:main": "yarn test && git checkout main && git merge develop && yarn build && yarn release && git push --follow-tags origin main && bash ./scripts/deploy.bash -d production && git checkout develop && git merge main && git push",
+        "build:docker": "sudo bash ./build_docker.bash ./dockerfile.stag name_container"
     },
     "dependencies": {
         "@casl/ability": "^6.5.0",
