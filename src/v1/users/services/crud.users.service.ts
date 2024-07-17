@@ -67,14 +67,7 @@ export class UserService {
                         },
                     ],
                 },
-                include: {
-                    Profiles: {
-                        select: {
-                            role: true,
-                            active: true,
-                        },
-                    },
-                },
+                include: queryFetchUsers,
                 skip: offset,
                 take: limit,
             });
@@ -128,16 +121,7 @@ export class UserService {
         try {
             const user = await this.prismaService.user.findUnique({
                 where: query,
-                include: {
-                    Profiles: {
-                        select: {
-                            id: true,
-                            role: true,
-                            active: true,
-                        },
-                    },
-                    Avatar: true,
-                },
+                include: queryFetchUsers,
             });
 
             if (!user) {

@@ -37,7 +37,7 @@ export class UserController {
         });
     }
 
-    @Get('/search/:limit/:offset/:sort/:regexp/:fields?')
+    @Get('/search/:limit/:offset/:sort/:regexp')
     @ApiOperation({
         summary: 'Search Users',
         description: 'Search for users based on regex patterns',
