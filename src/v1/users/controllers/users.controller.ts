@@ -13,7 +13,7 @@ import { IRequestWithUser, JwtAuthGuard, ParamsDto, RequestHandlerUtil } from '@
 export class UserController {
     constructor(private readonly _userService: UserService) {}
 
-    @Get(':limit/:offset/:sort/:fields?')
+    @Get(':limit/:offset/:sort')
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @ApiOperation({

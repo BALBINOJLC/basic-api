@@ -43,6 +43,14 @@ export class UserUpdateDto extends PartialType(RegisterUserDto) {
     @IsOptional()
     @IsBoolean()
     two_auth?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    is_active?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    email_verify?: boolean;
 }
 
 export class RemoveProfileDto {
