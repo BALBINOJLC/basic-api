@@ -21,7 +21,7 @@
         "test:cov": "jest --coverage",
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
         "test:e2e": "jest --config ./test/jest-e2e.json",
-        "prepare": "husky install",
+        "prepare": "husky",
         "release": "standard-version",
         "deploy:staging": "yarn test && git checkout staging && git merge develop && yarn build && yarn release && git push --follow-tags origin staging && bash ./scripts/deploy.bash -d staging && git checkout develop && git merge staging && git push",
         "deploy:main": "yarn test && git checkout main && git merge develop && yarn build && yarn release && git push --follow-tags origin main && bash ./scripts/deploy.bash -d production && git checkout develop && git merge main && git push",

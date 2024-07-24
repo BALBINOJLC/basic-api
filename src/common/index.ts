@@ -6,3 +6,4 @@ export * from './classes';
 export * from './guards';
 export * from './middlewares';
 export * from './decorators';
+export * from './enums';
