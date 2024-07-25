@@ -1,13 +1,43 @@
 import { IsBoolean, IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsStrongPassword } from 'class-validator';
 
-export class LoginUserDto {
+class PasswordDto {
+    @IsStrongPassword(
+        {
+            minLength: 8,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1,
+        },
+        { message: 'AUTH.ERRORS.PASSWORD_NOT_STRONG' }
+    )
+    password: string;
+}
+
+export class ChangePasswordDto {
+    @IsNotEmpty()
+    @IsString()
+    currentPassword: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @IsStrongPassword(
+        {
+            minLength: 8,
+            minLowercase: 1,
+            minUppercase: 1,
+            minNumbers: 1,
+            minSymbols: 1,
+        },
+        { message: 'AUTH.ERRORS.PASSWORD_NOT_STRONG' }
+    )
+    newPassword: string;
+}
+
+export class LoginUserDto extends PasswordDto {
     @IsString()
     @IsEmail()
     email: string;
-
-    @IsString()
-    @IsStrongPassword()
-    password: string;
 }
 
 export class PasswordForgotDto {
@@ -15,15 +45,11 @@ export class PasswordForgotDto {
     email: string;
 }
 
-export class ResetPasswordDto {
-    @IsString()
-    @IsStrongPassword()
-    password: string;
-}
+export class ResetPasswordDto extends PasswordDto {}
 
 import { EUserRole } from '@prisma/client';
 
-export class RegisterUserDto {
+export class RegisterUserDto extends PasswordDto {
     @IsString()
     @IsNotEmpty()
     first_name: string;
@@ -36,10 +62,6 @@ export class RegisterUserDto {
     @IsEmail()
     @IsNotEmpty()
     email: string;
-
-    @IsString()
-    @IsStrongPassword()
-    password: string;
 
     @IsOptional()
     @IsBoolean()

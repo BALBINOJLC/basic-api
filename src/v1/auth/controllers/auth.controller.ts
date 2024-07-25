@@ -4,7 +4,7 @@ import { ApiBasicAuth, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
 import { Response } from 'express';
 import { JwtAuthGuard, IRequestWithUser, RequestHandlerUtil, CustomError } from '@common';
-import { PasswordForgotDto, RegisterUserDto, ResetPasswordDto } from '../dtos';
+import { ChangePasswordDto, PasswordForgotDto, RegisterUserDto, ResetPasswordDto } from '../dtos';
 
 @ApiTags('AUTH')
 @Controller({
@@ -57,10 +57,10 @@ export class AuthController {
     async changePassword(
         @Request() req: IRequestWithUser,
         @Res() res: Response,
-        @Body() body: { currentPassword: string; newPassword: string }
+        @Body() body: ChangePasswordDto
     ): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.changePassword(req, body.currentPassword, body.newPassword),
+            action: () => this._authService.changePassword(req, body),
             res,
             module: this.constructor.name,
             actionDescription: 'Change Password',

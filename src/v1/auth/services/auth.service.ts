@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { HttpStatus, Injectable, Logger, Request } from '@nestjs/common';
 import * as argon2 from 'argon2';
-import { LoginUserDto, RegisterMasiveDto, RegisterUserDto } from '../dtos';
+import { ChangePasswordDto, LoginUserDto, RegisterMasiveDto, RegisterUserDto } from '../dtos';
 import { JwtService } from '@nestjs/jwt';
 import { IJwtPayload, IResponseMessage } from '../interfaces';
 import { envs } from 'src/config';
@@ -410,9 +410,11 @@ export class AuthService {
         }
     }
 
-    async changePassword(@Request() req: IRequestWithUser, currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    async changePassword(@Request() req: IRequestWithUser, input: ChangePasswordDto): Promise<{ message: string }> {
         try {
             const email = req.user.email;
+
+            const { currentPassword, newPassword } = input;
 
             const validateUser = await this.validateUser(email, currentPassword);
             await this.validateSamePassword({
