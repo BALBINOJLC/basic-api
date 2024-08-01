@@ -4,7 +4,7 @@ import { ApiBasicAuth, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { envs } from 'src/config/envs';
 import { Response } from 'express';
 import { JwtAuthGuard, IRequestWithUser, RequestHandlerUtil, CustomError } from '@common';
-import { ChangePasswordDto, PasswordForgotDto, RegisterUserDto, ResetPasswordDto } from '../dtos';
+import { PasswordForgotDto, RegisterUserDto, ResetPasswordDto } from '../dtos';
 
 @ApiTags('AUTH')
 @Controller({
@@ -45,7 +45,7 @@ export class AuthController {
     ): Promise<Response | void> {
         const { password } = body;
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.resetPassword(token, password),
+            action: () => this._authService.password.resetPassword(token, password),
             res,
             module: this.constructor.name,
         });
@@ -57,10 +57,10 @@ export class AuthController {
     async changePassword(
         @Request() req: IRequestWithUser,
         @Res() res: Response,
-        @Body() body: ChangePasswordDto
+        @Body() body: { currentPassword: string; newPassword: string }
     ): Promise<Response | void> {
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.changePassword(req, body),
+            action: () => this._authService.password.changePassword(req, body.currentPassword, body.newPassword),
             res,
             module: this.constructor.name,
             actionDescription: 'Change Password',
@@ -85,7 +85,7 @@ export class AuthController {
                     module: this.constructor.name,
                 });
             }
-            const resp = await this._authService.setNewPasswordAdmin(email, password);
+            const resp = await this._authService.password.setNewPasswordAdmin(email, password);
             return res.json(resp);
         } catch (error: unknown) {
             if (error instanceof Error) {
@@ -100,7 +100,7 @@ export class AuthController {
     async passwordReset(@Body() body: PasswordForgotDto, @Res() res: Response): Promise<Response | void> {
         const { email } = body;
         return RequestHandlerUtil.handleRequest({
-            action: () => this._authService.forgotPassword(email),
+            action: () => this._authService.password.forgotPassword(email),
             res,
             module: this.constructor.name,
             actionDescription: 'Send Password Reset Link',
