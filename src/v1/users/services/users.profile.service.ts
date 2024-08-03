@@ -250,11 +250,7 @@ export class UserProfileService {
             return true;
         }
 
-        if (
-            existingRoles.includes(EUserRole.OWNER) ||
-            existingRoles.includes(EUserRole.ADMIN) ||
-            existingRoles.includes(EUserRole.INVESTOR)
-        ) {
+        if (existingRoles.includes(EUserRole.OWNER) || existingRoles.includes(EUserRole.ADMIN) || existingRoles.includes(EUserRole.USER)) {
             return true;
         }
 
