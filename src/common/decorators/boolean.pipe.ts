@@ -13,7 +13,12 @@ export class ParseMultipleBoolPipe implements PipeTransform<any> {
         const result: Record<string, any> = {};
         for (const key in obj) {
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                result[key] = this.parseBoolean(obj[key]);
+                // Only parse boolean values
+                if (typeof obj[key] === 'boolean' || obj[key] === 'true' || obj[key] === 'false') {
+                    result[key] = this.parseBoolean(obj[key]);
+                } else {
+                    result[key] = obj[key];
+                }
             }
         }
         return result;
