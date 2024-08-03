@@ -1,9 +1,10 @@
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProfileDto, ProfileDto, RemoveProfileDto } from '../dtos';
 import { EUserRole, User, UserProfile } from '@prisma/client';
 import { PrismaService } from '@prisma';
 import { CustomError } from '@common';
 
+@Injectable()
 export class UserProfileService {
     constructor(private prismaService: PrismaService) {}
     async addProfileToUser(payload: CreateProfileDto): Promise<User> {
@@ -83,15 +84,8 @@ export class UserProfileService {
 
     async changeProfileUser(newProfileId: string, userId: string): Promise<User> {
         try {
-            //Run and desactivate all Profiles
-            await this.prismaService.userProfile.updateMany({
-                where: {
-                    user_id: userId,
-                },
-                data: {
-                    active: false,
-                },
-            });
+            //Run and deactivate all Profiles
+            await this.setAllProfilesInactive(userId);
 
             // Activate the new profile
             await this.prismaService.userProfile.update({
@@ -129,6 +123,10 @@ export class UserProfileService {
 
     async updateProfileUser(profileId: string, data: ProfileDto): Promise<UserProfile> {
         await this.validateNotOwnerProfile(data.role);
+        if (data.active) {
+            const user = await this.getUserByProfileId(profileId);
+            await this.setAllProfilesInactive(user.id);
+        }
         return await this.prismaService.userProfile.update({
             where: {
                 id: profileId,
@@ -137,6 +135,44 @@ export class UserProfileService {
                 role: data.role,
             },
         });
+    }
+
+    async getUserByProfileId(profileId: string): Promise<User> {
+        try {
+            const user = await this.prismaService.user.findFirst({
+                where: {
+                    Profiles: {
+                        some: {
+                            id: profileId,
+                        },
+                    },
+                },
+                include: {
+                    Profiles: {
+                        select: {
+                            id: true,
+                            role: true,
+                            active: true,
+                        },
+                    },
+                },
+            });
+            if (!user) {
+                throw new CustomError({
+                    statusCode: HttpStatus.NOT_FOUND,
+                    message: 'USER.ERRORS.USER.NOT_FOUND',
+                    module: this.constructor.name,
+                });
+            }
+            return user;
+        } catch (error) {
+            throw new CustomError({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'USER.ERRORS.PROFILE.GET_USER_BY_PROFILE',
+                module: this.constructor.name,
+                innerError: error as Error,
+            });
+        }
     }
 
     async removeProfileFromUser(dataProfile: RemoveProfileDto): Promise<{ message: string }> {
@@ -214,8 +250,11 @@ export class UserProfileService {
             return true;
         }
 
-        if (existingRoles.includes(EUserRole.OWNER) || existingRoles.includes(EUserRole.ADMIN) || existingRoles.includes(EUserRole.GUEST)) {
-            // if the user is OWNER, STUDENT or DIRECTOR, no other roles can be added
+        if (
+            existingRoles.includes(EUserRole.OWNER) ||
+            existingRoles.includes(EUserRole.ADMIN) ||
+            existingRoles.includes(EUserRole.INVESTOR)
+        ) {
             return true;
         }
 
@@ -228,6 +267,26 @@ export class UserProfileService {
                 statusCode: HttpStatus.BAD_REQUEST,
                 message: 'USER.ERRORS.PROFILE.OWNER_PROFILE',
                 module: this.constructor.name,
+            });
+        }
+    }
+
+    private async setAllProfilesInactive(userId: string): Promise<void> {
+        try {
+            await this.prismaService.userProfile.updateMany({
+                where: {
+                    user_id: userId,
+                },
+                data: {
+                    active: false,
+                },
+            });
+        } catch (error) {
+            throw new CustomError({
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'USER.ERRORS.PROFILE.SET_ALL_PROFILES_INACTIVE',
+                module: this.constructor.name,
+                innerError: error as Error,
             });
         }
     }
