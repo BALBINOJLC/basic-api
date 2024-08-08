@@ -28,6 +28,7 @@
         "build:docker": "sudo bash ./build_docker.bash ./dockerfile.stag name_container"
     },
     "dependencies": {
+        "@azure/storage-blob": "^12.24.0",
         "@casl/ability": "^6.5.0",
         "@nestjs/common": "^10.2.1",
         "@nestjs/config": "^3.0.0",

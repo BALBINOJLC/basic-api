@@ -16,6 +16,10 @@ const eventsShema = Joi.object({
     BV_API_KEY: Joi.string().required(),
     BV_VERIFY_ACCOUNT: Joi.string().required(),
     BV_RESET_PASSWORD: Joi.string().required(),
+    AZURE_STORAGE_CONNECTION_STRING: Joi.string().required(),
+    AZURE_STORAGE_KEY: Joi.string().required(),
+    AZURE_STORAGE_ACCOUNT_NAME: Joi.string().required(),
+    AZURE_STORAGE_CONTAINER_NAME: Joi.string().required(),
 });
 
 const { error } = eventsShema.validate(process.env, { allowUnknown: true });

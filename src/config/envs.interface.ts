@@ -1,6 +1,13 @@
 /* eslint-disable prettier/prettier */
+
+export enum EEnvironment {
+    DEVELOPMENT = 'development',
+    PRODUCTION = 'production',
+    STAGING = 'staging',
+    TEST = 'test',
+}
 export interface IEnvVars {
-    API_ENV: string;
+    API_ENV: EEnvironment;
     API_PORT: string;
     API_PREFIX: string;
     API_URI: string;
@@ -13,6 +20,10 @@ export interface IEnvVars {
     BV_API_KEY: string;
     BV_VERIFY_ACCOUNT: string;
     BV_RESET_PASSWORD: string;
+    AZURE_STORAGE_CONNECTION_STRING: string;
+    AZURE_STORAGE_KEY: string;
+    AZURE_STORAGE_ACCOUNT_NAME: string;
+    AZURE_STORAGE_CONTAINER_NAME: string;
 }
 
 export interface INodeEnv {
@@ -33,6 +44,17 @@ export interface ITwilioEnv {
 export interface IBrevoEnv {
     api_key: IEnvVars['BV_API_KEY'];
     templates: IBrevoTemplates;
+}
+
+export interface IAzureEnv {
+    blobs: IAzureBlobsEnv;
+}
+
+export interface IAzureBlobsEnv {
+    connectionString: IEnvVars['AZURE_STORAGE_CONNECTION_STRING'];
+    key: IEnvVars['AZURE_STORAGE_KEY'];
+    accountName: IEnvVars['AZURE_STORAGE_ACCOUNT_NAME'];
+    containerName: IEnvVars['AZURE_STORAGE_CONTAINER_NAME'];
 }
 
 export interface IBrevoTemplates {
