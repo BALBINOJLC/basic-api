@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { MimeTypeEnum } from '../enums';
+import { EMimeTypeEnum } from '../enums';
 
 export class FileDto {
     @IsNotEmpty()
@@ -10,9 +10,9 @@ export class FileDto {
 
     @IsNotEmpty()
     @IsString()
-    @IsEnum(MimeTypeEnum)
+    @IsEnum(EMimeTypeEnum)
     @ApiProperty()
-    readonly mimetype: MimeTypeEnum;
+    readonly mimetype: EMimeTypeEnum;
 
     @IsNotEmpty()
     @ApiProperty()

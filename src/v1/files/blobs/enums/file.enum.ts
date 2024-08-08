@@ -1,4 +1,4 @@
-export enum MimeTypeEnum {
+export enum EMimeTypeEnum {
     JPEG = 'image/jpeg',
     PNG = 'image/png',
     GIF = 'image/gif',
