@@ -36,7 +36,7 @@ model User {
   phone_area   String?
   dni          String?
   two_auth     Boolean       @default(false)
-  Avatar       File?         @relation(fields: [file_id], references: [id])
+  Avatar       Avatar?
   Profiles     UserProfile[]
   file_id      String        @unique @db.ObjectId
   createdAt    DateTime      @default(now())
@@ -74,11 +74,11 @@ model File {
   color      String?
   bucket     String?
   isPublic   Boolean   @default(true)
-  User       User?
   createdAt  DateTime  @default(now())
   deleted_at DateTime?
   is_deleted Boolean   @default(false)
   updatedAt  DateTime  @updatedAt
+  Avatar     Avatar[]
 
   @@map("files")
 }
@@ -86,4 +86,14 @@ model File {
 model Counter {
   id  String @id @default(auto()) @map("_id") @db.ObjectId
   seq Int    @default(0)
+}
+
+model Avatar {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  User    User   @relation(fields: [user_id], references: [id])
+  File    File   @relation(fields: [file_id], references: [id])
+  file_id String @db.ObjectId
+  user_id String @unique @db.ObjectId
+
+  @@map("avatars")
 }
