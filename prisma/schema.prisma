@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -22,78 +22,88 @@ enum EUserRole {
   GUEST
 }
 
+enum EUserStatus {
+  AUTORIZED
+  PENDING
+  CHEKING
+  LOCKED
+  REJECTED
+}
+
 model User {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  email        String        @unique
-  user_name    String        @unique
-  first_name   String
-  last_name    String
+  id           String        @id @default(uuid()) @map("_id")
   display_name String
-  password     String
+  email        String        @unique
+  dni          String        @unique
   email_verify Boolean       @default(false)
+  first_name   String
   is_active    Boolean       @default(false)
+  status       EUserStatus   @default(PENDING)
+  last_name    String
+  password     String
   phone        String?
   phone_area   String?
-  dni          String?
-  two_auth     Boolean       @default(false)
-  Avatar       Avatar?
+  address      String?
+  birth_date   DateTime?
+  user_name    String        @unique
+  file_id      String?       @unique
   Profiles     UserProfile[]
-  file_id      String        @unique @db.ObjectId
-  createdAt    DateTime      @default(now())
+  created_at   DateTime      @default(now())
   deleted_at   DateTime?
   is_deleted   Boolean       @default(false)
-  updatedAt    DateTime      @updatedAt
+  updated_at   DateTime      @updatedAt
+  Avatar       Avatar?
+  is_new       Boolean       @default(true)
 
   @@map("users")
 }
 
 model UserProfile {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  id         String    @id @default(uuid()) @map("_id")
   role       EUserRole
-  User       User      @relation(fields: [user_id], references: [id])
-  user_id    String    @unique @db.ObjectId
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   active     Boolean   @default(false)
-  createdAt  DateTime  @default(now())
+  user_id    String
+  created_at DateTime  @default(now())
   deleted_at DateTime?
   is_deleted Boolean   @default(false)
-  updatedAt  DateTime  @updatedAt
+  updated_at DateTime  @updatedAt
 
   @@map("user_profiles")
 }
 
 model File {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  url        String?
-  name       String
-  key        String?
-  extension  String?
-  mimetype   String?
-  size       Int?
-  type       String?
+  id         String    @id @default(uuid()) @map("_id")
+  bucket     String?
   charter    String?
   color      String?
-  bucket     String?
-  isPublic   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
+  extension  String?
+  is_public  Boolean   @default(true)
+  key        String?
+  mimetype   String?
+  name       String
+  size       Int?
+  type       String?
+  url        String?
+  created_at DateTime  @default(now())
   deleted_at DateTime?
   is_deleted Boolean   @default(false)
-  updatedAt  DateTime  @updatedAt
+  updated_at DateTime  @updatedAt
   Avatar     Avatar[]
 
   @@map("files")
 }
 
 model Counter {
-  id  String @id @default(auto()) @map("_id") @db.ObjectId
+  id  String @id @default(uuid()) @map("_id")
   seq Int    @default(0)
 }
 
 model Avatar {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
   User    User   @relation(fields: [user_id], references: [id])
   File    File   @relation(fields: [file_id], references: [id])
-  file_id String @db.ObjectId
-  user_id String @unique @db.ObjectId
+  file_id String
+  user_id String @unique
 
-  @@map("avatars")
+  @@id([file_id, user_id])
 }

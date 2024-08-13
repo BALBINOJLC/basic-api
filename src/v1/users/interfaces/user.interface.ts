@@ -29,4 +29,5 @@ export interface IUserProfile {
     id: string;
     role: EUserRole;
     active: boolean;
+    is_deleted?: boolean;
 }

@@ -11,7 +11,7 @@ export interface IPhotoUrl extends Partial<File> {
 
 export interface IDataBaseUser {
     user_name: string;
-    Avatar: IPhotoUrl;
+    Avatar: any;
 }
 
 export interface IResponseList {

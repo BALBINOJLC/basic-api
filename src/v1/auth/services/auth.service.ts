@@ -11,6 +11,7 @@ import { CustomError, IRequestWithUser, excludePassword, userNameAndCharter } fr
 import { EmailService } from '@email';
 import { ValitationsAuthService } from './validations.auth.service';
 import { PasswordAuhService } from './password.auth.service';
+import { EUserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -61,6 +62,9 @@ export class AuthService {
             const hashedPassword = await argon2.hash(password);
 
             const newUser: any = (await this.prismaS.$transaction(async (prisma) => {
+                const newFile = await prisma.file.create({
+                    data: userNameAndCharter(email).Avatar,
+                });
                 const createdUser = await prisma.user.create({
                     data: {
                         email: email.toLowerCase().trim(),
@@ -69,14 +73,17 @@ export class AuthService {
                         user_name: userNameAndCharter(email).user_name,
                         first_name,
                         last_name,
+                        dni: registerUserDto.dni.replace(/[^\w\s]/gi, ''),
                         Profiles: {
                             create: {
-                                role: 'USER',
+                                role: EUserRole.CLIENT,
                                 active: true,
                             },
                         },
                         Avatar: {
-                            create: userNameAndCharter(email).Avatar,
+                            create: {
+                                file_id: newFile.id,
+                            },
                         },
                     },
                 });

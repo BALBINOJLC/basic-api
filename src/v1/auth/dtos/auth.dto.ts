@@ -70,6 +70,9 @@ export class RegisterUserDto extends PasswordDto {
     @IsOptional()
     @IsBoolean()
     email_verify?: boolean;
+
+    @IsString()
+    dni: string;
 }
 
 export class RegisterMasiveDto {
