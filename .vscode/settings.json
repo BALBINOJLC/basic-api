@@ -1,4 +1,10 @@
 {
-    "CodeGPT.apiKey": "OpenAI",
-    "material-icon-theme.activeIconPack": "nest"
+    "angular-schematics.schematicsDefaultOptions": {
+        "angular-*": {
+            "externalTemplate": true
+        },
+        "angular-component": {
+            "ngOnInit": true
+        }
+    }
 }
