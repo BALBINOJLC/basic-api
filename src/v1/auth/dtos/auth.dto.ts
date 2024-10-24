@@ -73,6 +73,10 @@ export class RegisterUserDto extends PasswordDto {
 
     @IsString()
     dni: string;
+
+    @IsEnum(EUserRole)
+    @IsOptional()
+    role: EUserRole;
 }
 
 export class RegisterMasiveDto {

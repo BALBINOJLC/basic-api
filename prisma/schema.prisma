@@ -48,15 +48,12 @@ model User {
   email_verify Boolean       @default(false)
   first_name   String
   is_active    Boolean       @default(false)
-  status       EUserStatus   @default(PENDING)
   last_name    String
   password     String
   phone        String?
   phone_area   String?
   address      String?
-  birth_date   DateTime?
   user_name    String        @unique
-  file_id      String?       @unique
   Profiles     UserProfile[]
   created_at   DateTime      @default(now())
   deleted_at   DateTime?

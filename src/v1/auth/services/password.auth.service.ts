@@ -8,12 +8,12 @@ import * as argon2 from 'argon2';
 import { IResponseMessage } from '../interfaces';
 import { IRequestWithUser } from '@common';
 import { IUser } from '@users';
-import { ValitationsAuthService } from './validations.auth.service';
+import { ValidationsAuthService } from './validations.auth.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class PasswordAuhService {
-    valitations = new ValitationsAuthService(this.jwtService, this.prismaS);
+    validations = new ValidationsAuthService(this.jwtService, this.prismaS);
     constructor(
         private prismaS: PrismaService,
         private _emailService: EmailService,
@@ -113,7 +113,7 @@ export class PasswordAuhService {
         try {
             const email = req.user.email;
 
-            const validateUser = await this.valitations.validateUser(email, currentPassword);
+            const validateUser = await this.validations.validateUser(email, currentPassword);
             await this.validateSamePassword({
                 password: newPassword,
                 hashPassword: validateUser.password,
@@ -151,7 +151,7 @@ export class PasswordAuhService {
                 });
             }
 
-            const token = await this.valitations.signJWT(user);
+            const token = await this.validations.signJWT(user);
             await this._emailService.forgotPassword(token, user);
 
             const resp = {

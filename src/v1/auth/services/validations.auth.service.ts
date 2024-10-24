@@ -7,7 +7,7 @@ import { PrismaService } from '@prisma';
 import { IUser } from '@users';
 
 @Injectable()
-export class ValitationsAuthService {
+export class ValidationsAuthService {
     constructor(
         private readonly jwtService: JwtService,
         private prismaS: PrismaService

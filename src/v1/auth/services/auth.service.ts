@@ -9,13 +9,14 @@ import { ILoginResponse, IRegisterResponse, IResponseVerifyToken } from '../inte
 import { IUser } from '@users';
 import { CustomError, IRequestWithUser, excludePassword, userNameAndCharter } from '@common';
 import { EmailService } from '@email';
-import { ValitationsAuthService } from './validations.auth.service';
+import { ValidationsAuthService } from './validations.auth.service';
 import { PasswordAuhService } from './password.auth.service';
 import { EUserRole } from '@prisma/client';
+import { queryFetchUser } from 'src/v1/users/queries';
 
 @Injectable()
 export class AuthService {
-    valitations = new ValitationsAuthService(this.jwtService, this.prismaS);
+    validations = new ValidationsAuthService(this.jwtService, this.prismaS);
     password = new PasswordAuhService(this.prismaS, this._emailService, this.jwtService);
 
     constructor(
@@ -32,7 +33,7 @@ export class AuthService {
 
             return {
                 user: user,
-                access_token: await this.valitations.signJWT(user),
+                access_token: await this.validations.signJWT(user),
             };
         } catch (error) {
             throw new CustomError({
@@ -45,11 +46,14 @@ export class AuthService {
 
     async registerUser(registerUserDto: RegisterUserDto): Promise<IRegisterResponse> {
         const { email, first_name, password, last_name } = registerUserDto;
-
+        const dni = registerUserDto.dni.replace(/[^\w\s]/gi, '');
         try {
-            const user = await this.prismaS.user.findUnique({
-                where: { email },
+            const user = await this.prismaS.user.findFirst({
+                where: {
+                    OR: [{ dni: dni }, { email: email }],
+                },
             });
+          
 
             if (user) {
                 throw new CustomError({
@@ -76,7 +80,7 @@ export class AuthService {
                         dni: registerUserDto.dni.replace(/[^\w\s]/gi, ''),
                         Profiles: {
                             create: {
-                                role: EUserRole.CLIENT,
+                                role: registerUserDto.role ?? EUserRole.CLIENT,
                                 active: true,
                             },
                         },
@@ -91,7 +95,7 @@ export class AuthService {
                 return createdUser;
             })) as IUser;
 
-            const token = await this.valitations.signJWT(newUser);
+            const token = await this.validations.signJWT(newUser);
             await this._emailService.sendVerificationEmail(token, newUser);
 
             const { password: _, ...userResponse } = newUser;
@@ -107,23 +111,14 @@ export class AuthService {
     }
 
     async loginUser(@Request() req: IRequestWithUser): Promise<ILoginResponse> {
-        const athorization = await this.getAuthorization(req);
-        const email = athorization[0];
-        const password = athorization[1];
+        const authorization = await this.getAuthorization(req);
+        const email = authorization[0];
+        const password = authorization[1];
 
         try {
             const user: any = await this.prismaS.user.findUnique({
                 where: { email },
-                include: {
-                    Profiles: {
-                        select: {
-                            id: true,
-                            role: true,
-                            active: true,
-                        },
-                    },
-                    Avatar: true,
-                },
+                include: queryFetchUser
             });
 
             if (!user) {
@@ -137,21 +132,20 @@ export class AuthService {
             if (!user.email_verify) {
                 throw new CustomError({
                     statusCode: HttpStatus.BAD_REQUEST,
-                    message: 'AUTH.ERRORS.SIGNIN.EMAIL_NOT_VERIFIED',
+                    message: 'AUTH.ERRORS.SIGN_IN.EMAIL_NOT_VERIFIED',
                     module: this.constructor.name,
                 });
             }
 
-            await this.valitations.validatePassword({
+            await this.validations.validatePassword({
                 hashPassword: user.password,
                 password,
             });
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const rest = excludePassword(user);
 
             return {
                 user: rest,
-                access_token: await this.valitations.signJWT(rest),
+                access_token: await this.validations.signJWT(rest),
             };
         } catch (error) {
             throw new CustomError({
@@ -178,7 +172,7 @@ export class AuthService {
                     },
                 });
                 // refresh token
-                const token = await this.valitations.signJWT(user);
+                const token = await this.validations.signJWT(user);
 
                 const resp = {
                     message: 'AUTH.ACCOUNT_ACTIVATED',

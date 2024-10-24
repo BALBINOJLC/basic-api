@@ -201,7 +201,7 @@ export class UserService {
             });
 
             if (profile) {
-                token = await this.authService.valitations.signJWT(user);
+                token = await this.authService.validations.signJWT(user);
             }
 
             return {
